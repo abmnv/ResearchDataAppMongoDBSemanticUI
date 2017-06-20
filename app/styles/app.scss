@@ -1,0 +1,16 @@
+@import "base/variables";
+
+//load foundation
+//@import "base/foundation-settings";
+//@import "foundation";
+//@include foundation-everything;
+
+//include components
+@import 'components/body';
+@import 'components/nav';
+@import 'components/project';
+@import 'components/container';
+@import 'components/login';
+@import 'components/editProject';
+@import 'components/ProgressButton';
+@import 'components/ProgressButtonDelete';

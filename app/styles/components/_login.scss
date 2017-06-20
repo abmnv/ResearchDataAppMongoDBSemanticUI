@@ -1,0 +1,24 @@
+.callout-auth {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  text-align: center;
+  background-color: #fafafa;
+  p {
+    margin-bottom: 2rem;
+  }
+}
+
+.login-error {
+  color: red;
+}
+
+.login-button, .signup-button {
+  color: #1468A0;
+  cursor: pointer;
+}
+
+.modal-input {
+  width: 350px;
+  border-radius: 4px;
+}

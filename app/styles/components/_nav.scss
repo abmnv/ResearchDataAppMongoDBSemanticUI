@@ -1,0 +1,22 @@
+.top-bar, .top-bar ul {
+  background-color: $nav-bg;
+}
+
+.top-bar {
+  .menu-text {
+    color: $nav-text-color;
+  }
+
+  input {
+    width: 200px;
+  }
+
+  .button {
+    padding-right: 2rem;
+    padding-left: 2rem;
+  }
+}
+
+.active-link {
+  font-weight: bold;
+}

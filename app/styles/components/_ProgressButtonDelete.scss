@@ -1,0 +1,118 @@
+
+
+.pb-delete-container {
+  display: inline-block;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+.pb-delete-container .pb-delete-button {
+  background: transparent;
+  border: 2px solid currentColor;
+  //border-radius: 27px;
+  border-radius: 6px;
+  //color: currentColor;
+  background-color: #CC4B37;//red
+  color: #fefefe;
+  //color: #14679E;
+  cursor: pointer;
+  padding-left: 0.7rem;
+  padding-right: 0.7rem;
+  padding-bottom: 0.18rem;
+  text-decoration: none;
+  text-align: center;
+  //height: 54px;
+  height: 28px;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  transition: background-color 0.3s, width 0.3s, border-width 0.3s, border-color 0.3s, border-radius 0.3s;
+}
+.pb-delete-container .pb-delete-button span {
+  display: inherit;
+  transition: opacity 0.3s 0.1s;
+  //font-size: 2em;
+  font-size: 0.6rem;
+  font-weight: 100;
+}
+.pb-delete-container .pb-delete-button svg {
+  height: 28px;
+  width: 28px;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.pb-delete-container .pb-delete-button svg path {
+  opacity: 0;
+  fill: none;
+}
+.pb-delete-container .pb-delete-button svg.pb-delete-progress-circle {
+  animation: spin 0.9s infinite cubic-bezier(0.085, 0.260, 0.935, 0.710);
+}
+.pb-delete-container .pb-delete-button svg.pb-delete-progress-circle path {
+  //stroke: currentColor;
+  stroke: #1779ba;
+  stroke-width: 5;
+}
+.pb-delete-container .pb-delete-button svg.pb-delete-checkmark path,
+.pb-delete-container .pb-delete-button svg.pb-delete-cross path {
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-width: 4;
+}
+.pb-delete-container.disabled .pb-delete-button {
+  cursor: not-allowed;
+}
+.pb-delete-container.loading .pb-delete-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  border-width: 6.5px;
+  border-color: #ddd;
+  cursor: wait;
+  background-color: transparent;
+  padding: 0;
+}
+.pb-delete-container.loading .pb-delete-button span {
+  transition: all 0.15s;
+  opacity: 0;
+  display: none;
+}
+.pb-delete-container.loading .pb-delete-button .pb-delete-progress-circle > path {
+  transition: opacity 0.15s 0.3s;
+  opacity: 1;
+}
+.pb-delete-container.success .pb-delete-button {
+  border-color: #A0D468;
+  background-color: #A0D468;
+}
+.pb-delete-container.success .pb-delete-button span {
+  transition: all 0.15s;
+  opacity: 0;
+  display: none;
+}
+.pb-delete-container.success .pb-delete-button .pb-delete-checkmark > path {
+  opacity: 1;
+}
+.pb-delete-container.error .pb-delete-button {
+  border-color: #ED5565;
+  background-color: #ED5565;
+}
+.pb-delete-container.error .pb-delete-button span {
+  transition: all 0.15s;
+  opacity: 0;
+  display: none;
+}
+.pb-delete-container.error .pb-delete-button .pb-delete-cross > path {
+  opacity: 1;
+}
+@keyframes spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+    transform-origin: center center;
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+    transform-origin: center center;
+  }
+}

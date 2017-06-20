@@ -1,0 +1,5 @@
+node_modules/
+public/data/
+public/bundle.js
+.env
+upload/
