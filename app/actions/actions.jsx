@@ -149,11 +149,11 @@ export var startLogout = () => {
   return (dispatch, getState) => {
     const {auth: {token}} = getState();
     return dbAPI.logout(token).then(() => {
-      console.log('token was removed from MongoDB');
+      //console.log('token was removed from MongoDB');
       localStorage.removeItem('researchDataAppToken');
       dispatch(logout());
     }).catch((err) => {
-      console.log('Logout error:', err);
+      //console.log('Logout error:', err);
     })
 
     // return firebase.auth().signOut().then(() => {
@@ -222,7 +222,7 @@ export var startAddProjects = () => {
     dispatch(setLoadingStatus(true));
 
     dbAPI.getProjects().then((projects) => {
-      console.log('projects:', projects);
+      //console.log('projects:', projects);
       // console.log('newProjects:', newProjects);
       dispatch(addProjects(projects));
       dispatch(setLoadingStatus(false));

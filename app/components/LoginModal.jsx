@@ -30,21 +30,20 @@ class LoginModal extends React.Component {
   constructor(props){
     super(props);
 
-    this.state = {
-      modalIsOpen: false
-    };
+    // this.state = {
+    //   modalIsOpen: false
+    // };
 
-    this.handleOpenModal = this.handleOpenModal.bind(this);
+    //this.handleOpenModal = this.handleOpenModal.bind(this);
     this.handleCloseModal = this.handleCloseModal.bind(this);
     this.handleOpenSignUpModal = this.handleOpenSignUpModal.bind(this);
-
   }
 
-  handleOpenModal () {
-    this.setState({
-      modalIsOpen: true
-    })
-  }
+  // handleOpenModal () {
+  //   this.setState({
+  //     modalIsOpen: true
+  //   })
+  // }
 
   handleCloseModal () {
     const {dispatch} = this.props;
@@ -115,9 +114,11 @@ class LoginModal extends React.Component {
   renderAuthError () {
     if(this.props.auth.error){
       return (
-        <div className="login-error">
-          {this.props.auth.error}
-        </div>)
+        <Message error content={this.props.auth.error}/>
+      )
+      // <div className="login-error">
+      //   {this.props.auth.error}
+      // </div>
     }else{
       return null;
     }
@@ -140,7 +141,7 @@ class LoginModal extends React.Component {
     // };
 
     return (
-      <Modal open size={"small"} onClose={this.handleCloseModal}>
+      <Modal open size="small" onClose={this.handleCloseModal}>
         <Modal.Content>
           {this.renderAuthError()}
           <Form onSubmit={this.props.handleSubmit(this.handleEmailPasswordLogin)}>

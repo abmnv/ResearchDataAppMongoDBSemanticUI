@@ -2,7 +2,7 @@ import React from 'react';
 import {connect} from 'react-redux';
 import {Field, FieldArray, reduxForm, formValueSelector} from 'redux-form';
 import ProgressButton from 'react-progress-button';
-import {Checkbox} from 'semantic-ui-react';
+import {Card, Form, Input, Label, TextArea, Button, Grid, Icon, Progress, Checkbox} from 'semantic-ui-react';
 
 import FileList from 'FileList';
 import SimpleFileList from 'SimpleFileList';
@@ -24,6 +24,7 @@ class EditProject extends React.Component {
     this.state = {
       //...currentProject,
       filesSelection,
+      loading: false
       //buttonStatus: ''
     }
 
@@ -38,12 +39,18 @@ class EditProject extends React.Component {
     // const {id, title, description} = this.state;
     // const {uploadFileList} = this.props;
     //var fileList = $.extend(true, [], this.refs.fileUploader.files);
-    change('buttonStatus', 'loading');
+    //change('buttonStatus', 'loading');
+    this.setState({
+      loading: true
+    })
 
-    console.log('handleUpdateProject values:', values);
+    //console.log('handleUpdateProject values:', values);
     dispatch(actions.startUpdateProject({...values, id, change, array})).then(() => {
       //console.log('startUpdateProject success');
-      change('buttonStatus', 'success');
+      //change('buttonStatus', 'success');
+      this.setState({
+        loading: false
+      })
     });
 
     // if(title && description){
@@ -117,97 +124,143 @@ class EditProject extends React.Component {
   renderField = ({input, label, type, meta: {touched, error}}) => {
     //console.log('renderField touched, error:', touched, error);
     return (
-      <fieldset>
-        <div className="row">
-          <label className="column small-3 project-label">
-            {label}
-          </label>
-          <div className="column small-9">
-            <input {...input} type={type}></input>
-          </div>
-        </div>
-      </fieldset>
+      <Form.Input inline fluid {...input} label={label} type={type} error={touched && error}/>
     );
+    // <fieldset>
+    //   <div className="row">
+    //     <label className="column small-3 project-label">
+    //       {label}
+    //     </label>
+    //     <div className="column small-9">
+    //       <input {...input} type={type}></input>
+    //     </div>
+    //   </div>
+    // </fieldset>
   }
 
   renderTextArea = ({input, label, meta: {touched, error}}) => {
     //console.log('renderField touched, error:', touched, error);
     return (
-      <fieldset>
-        <div className="row">
-          <label className="column small-3 project-label">
-            {label}
-          </label>
-          <div className="column small-9">
-            <textarea {...input}></textarea>
-          </div>
-        </div>
-      </fieldset>
+      <Form.TextArea inline autoHeight {...input} label={label} error={touched && error}/>
     );
+    // <fieldset>
+    //   <div className="row">
+    //     <label className="column small-3 project-label">
+    //       {label}
+    //     </label>
+    //     <div className="column small-9">
+    //       <textarea {...input}></textarea>
+    //     </div>
+    //   </div>
+    // </fieldset>
   }
 
   renderUploadFileList = ({input, label, type}) => {
     //console.log('renderFileUploader this.fileUploader', this.fileUploader);
     return (
-      <fieldset>
-        <div className="row">
-          <p className="column small-3 project-label">
-            {label}
-          </p>
-          <div className="column small-2 end text-align-left">
-            <label htmlFor={input.name} className="button tiny radius">Select</label>
-            <input type={type} id={input.name} multiple="multiple" className="show-for-sr" onChange={this.adaptFileEventToValueFileList(input.onChange)}></input>
-          </div>
-        </div>
-        <div className="row">
-          <div className="column small-offset-3 small-9 text-align-left">
-            <SimpleFileList fileList={input.value ? input.value : []}/>
-          </div>
-        </div>
-      </fieldset>
+      <div>
+        <Form.Field>
+          <label>{label}</label>
+          <label htmlFor={input.name}>
+            <span className="basic blue mini ui button">Select</span>
+          </label>
+          <input type={type} id={input.name} multiple="multiple" onChange={this.adaptFileEventToValueFileList(input.onChange)} style={{display:"none"}}></input>
+        </Form.Field>
+        <SimpleFileList fileList={input.value ? input.value : []}/>
+      </div>
     )
+    // <fieldset>
+    //   <div className="row">
+    //     <p className="column small-3 project-label">
+    //       {label}
+    //     </p>
+    //     <div className="column small-2 end text-align-left">
+    //       <label htmlFor={input.name} className="button tiny radius">Select</label>
+    //       <input type={type} id={input.name} multiple="multiple" className="show-for-sr" onChange={this.adaptFileEventToValueFileList(input.onChange)}></input>
+    //     </div>
+    //   </div>
+    //   <div className="row">
+    //     <div className="column small-offset-3 small-9 text-align-left">
+    //       <SimpleFileList fileList={input.value ? input.value : []}/>
+    //     </div>
+    //   </div>
+    // </fieldset>
   }
 
   renderFields = ({fields}) => {
     return (
-      <div className="row">
-        <p className="column small-3 project-label middle">
-          Files:
-        </p>
-        <div className="column small-9">
-          {fields.map(this.renderSubFields)}
+      <div>
+        <div className="small-bottom-margin">
+          <label className="label bold">Files:</label>
+          <Label basic size="mini" color="red" className="right">Mark for deletion</Label>
         </div>
+        {fields.map(this.renderSubFields)}
       </div>
     )
+    // <div className="row">
+    //   <p className="column small-3 project-label middle">
+    //     Files:
+    //   </p>
+    //   <div className="column small-9">
+    //     {fields.map(this.renderSubFields)}
+    //   </div>
+    // </div>
   }
 
   renderSubFields = (member, index, fields) => {
+    // console.log('file name:', fields.get(index).name)
     return (
       <div key={index}>
-        <div className="row">
-          <Field name={`${member}.name`} component={this.renderFilename} id={`fileList${index}`}/>
-          <Field name={`${member}.selected`} component={this.renderCheckbox} type="checkbox" id={`fileList${index}`}/>
-        </div>
+        <Field name={`${member}.selected`} component={this.renderCheckbox} type="checkbox" label={fields.get(index).name}/>
       </div>
     )
+    // <Field name={`${member}.name`} component={this.renderFilename} id={`fileList${index}`}/>
+    // <div className="row">
+    //   <Field name={`${member}.name`} component={this.renderFilename} id={`fileList${index}`}/>
+    //   <Field name={`${member}.selected`} component={this.renderCheckbox} type="checkbox" id={`fileList${index}`}/>
+    // </div>
   }
 
   renderFilename = ({input, id}) => {
     return (
-      <label htmlFor={id} className="column small-10 left-text-align project-label normal-font-weight">
+      <label htmlFor={id}>
         {input.value}
       </label>
     )
+    // <label htmlFor={id} className="column small-10 left-text-align project-label normal-font-weight">
+    //   {input.value}
+    // </label>
     // htmlFor={id}
   }
 
-  renderCheckbox = ({input: {onChange, name, value, checked}, type, id}) => {
+  // renderCheckbox = ({input, label, type}) => {
+  renderCheckbox = ({input: {onChange, name, value, checked}, label, type}) => {
     //console.log('renderChecbox input:', input);
     return (
-      <div id={id} className="column small-2 right-text-align">
-        <Checkbox onChange={(e, {checked})=>(onChange(checked))} name={name} checked={checked} type={type} value={value} color={"red"}/>
+      <div>
+        <div className="field error">
+          <span>{label}</span>
+          <div className="ui checkbox fitted right">
+            <input tabindex="0" class="hidden" onChange={(checked)=>(onChange(checked))} name={name} checked={checked} type={type} value={value}/>
+            <label></label>
+          </div>
+        </div>
       </div>
     )
+    // <label>{label}</label>
+    // <label>I agree to the Terms and Conditions</label>
+    // <span>{label}</span>
+    // <Form.Checkbox onChange={(e, {checked})=>(onChange(checked))} name={name} checked={checked} type={type} value={value} error/>
+
+    // <p>{label}</p>
+    // <Form.Checkbox onChange={(e, {checked})=>(onChange(checked))} label={label} name={name} checked={checked} type={type} value={value} error/>
+
+    // <div id={id}>
+    //   <Checkbox onChange={(e, {checked})=>(onChange(checked))} d={id} name={name} checked={checked} type={type} value={value} color="red"/>
+    // </div>
+    // <div id={id} className="column small-2 right-text-align">
+    //   <Checkbox onChange={(e, {checked})=>(onChange(checked))} name={name} checked={checked} type={type} value={value} color={"red"}/>
+    // </div>
     //<input {...input} type={type} className="alert"/>
     // id={id}
     //<label className="column small-10 project-label" htmlFor={input.value}>
@@ -218,21 +271,35 @@ class EditProject extends React.Component {
     const {files, id, buttonStatus} = this.props;
 
     return (
-      <div className="create-project">
-        <form onSubmit={this.props.handleSubmit(this.handleUpdateProject)}>
-          <Field name="title" component={this.renderField} type="text" label="Title:"/>
-          <Field name="description" component={this.renderTextArea} label="Description:"/>
-          <FieldArray name="fileList" component={this.renderFields}/>
-          <Field name="uploadFileList" component={this.renderUploadFileList} type="file" label="Attach Files:"/>
-          <div className="row control-bar">
-            <div className="column small-offset-8 small-4">
-              <ProgressButton state={buttonStatus} durationSuccess={1000}>Save</ProgressButton>
-            </div>
-          </div>
-          <Field name="buttonStatus" component="input" type="hidden"/>
-        </form>
+      <div>
+        <Card fluid>
+          <Card.Content>
+            <Form onSubmit={this.props.handleSubmit(this.handleUpdateProject)}>
+              <Field name="title" component={this.renderField} type="text" label="Title:"/>
+              <Field name="description" component={this.renderTextArea} label="Description:"/>
+              <FieldArray name="fileList" component={this.renderFields}/>
+              <Field name="uploadFileList" component={this.renderUploadFileList} type="file" label="Attach Files:"/>
+              <Button primary loading={this.state.loading} floated="right">Save</Button>
+            </Form>
+          </Card.Content>
+        </Card>
       </div>
     )
+    // <div className="create-project">
+    //   <form onSubmit={this.props.handleSubmit(this.handleUpdateProject)}>
+    //     <Field name="title" component={this.renderField} type="text" label="Title:"/>
+    //     <Field name="description" component={this.renderTextArea} label="Description:"/>
+    //     <FieldArray name="fileList" component={this.renderFields}/>
+    //     <Field name="uploadFileList" component={this.renderUploadFileList} type="file" label="Attach Files:"/>
+    //     <div className="row control-bar">
+    //       <div className="column small-offset-8 small-4">
+    //         <ProgressButton state={buttonStatus} durationSuccess={1000}>Save</ProgressButton>
+    //       </div>
+    //     </div>
+    //     <Field name="buttonStatus" component="input" type="hidden"/>
+    //   </form>
+    // </div>
+
     // <div className="row">
     //   <label htmlFor="files" className="column small-3 project-label">Files:</label>
     //   <div className="column small-9">

@@ -51,30 +51,46 @@ class Project extends React.Component {
     }
 
     return (
-      <Card fluid color="red" >
+      <Card fluid>
         <Card.Content as={Link} to={'/projects/'+id}>
-          <Grid columns={2}>
-            <Grid.Row>
-              <Grid.Column width={4}>
-                <Image src={logoImage.url}/>
-              </Grid.Column>
-              <Grid.Column width={12}>
-                <Card.Header className="card-header">
-                  {title}
-                </Card.Header>
-                <Card.Meta>
-                  Created on {moment.unix(createdAt).format('MMM Do, YYYY @ h:mm a')}
-                </Card.Meta>
-                <Card.Description>
-                  {briefDescription}
-                </Card.Description>
-              </Grid.Column>
-            </Grid.Row>
-          </Grid>
+          <Image floated="left" size="tiny" src={logoImage.url}/>
+          <Card.Header>
+            {title}
+          </Card.Header>
+          <Card.Meta>
+            Created on {moment.unix(createdAt).format('MMM Do, YYYY @ h:mm a')}
+          </Card.Meta>
+          <Card.Description>
+            {briefDescription}
+          </Card.Description>
         </Card.Content>
         {projectControlBar()}
       </Card>
     );
+    // <Card as={Link} to={'/projects/'+id}>
+    //   <Card.Content>
+    //     <Grid columns={2}>
+    //       <Grid.Row>
+    //         <Grid.Column width={4}>
+    //           <Image src={logoImage.url}/>
+    //         </Grid.Column>
+    //         <Grid.Column width={12}>
+    //           <Card.Header className="card-header">
+    //             {title}
+    //           </Card.Header>
+    //           <Card.Meta>
+    //             Created on {moment.unix(createdAt).format('MMM Do, YYYY @ h:mm a')}
+    //           </Card.Meta>
+    //           <Card.Description>
+    //             {briefDescription}
+    //           </Card.Description>
+    //         </Grid.Column>
+    //       </Grid.Row>
+    //     </Grid>
+    //   </Card.Content>
+    //   {projectControlBar()}
+    // </Card>
+
     // <div>
     //   <div className="project">
     //     <Link to={'/projects/'+id} className="button expanded hollow project-button">

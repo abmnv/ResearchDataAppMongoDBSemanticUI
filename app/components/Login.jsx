@@ -7,7 +7,7 @@ import * as actions from 'actions';
 
 const validate = (values) => {
   const errors = {};
-  console.log('Validate values:', values);
+  //console.log('Validate values:', values);
 
   if(!values.email){
     errors.email = 'Please enter email'
@@ -21,7 +21,6 @@ const validate = (values) => {
 
   return errors;
 }
-
 
 class Login extends React.Component {
 
@@ -50,7 +49,7 @@ class Login extends React.Component {
   }
 
   handleEmailPasswordLogin = (values) => {
-    console.log('handleEmailPasswordSubmit values:', values);
+    //console.log('handleEmailPasswordSubmit values:', values);
     const {dispatch} = this.props;
     dispatch(actions.startEmailPasswordLogin(values)).then(() => {
       if(this.props.auth.isAuth){
@@ -61,7 +60,7 @@ class Login extends React.Component {
   }
 
   renderField = ({input, label, type, meta: {touched, error}}) => {
-    console.log('renderField touched, error:', touched, error);
+    //console.log('renderField touched, error:', touched, error);
     return (
       <fieldset>
 

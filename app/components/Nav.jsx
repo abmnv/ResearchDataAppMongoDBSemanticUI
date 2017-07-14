@@ -58,10 +58,8 @@ class Nav extends React.Component {
 
     return (
       <Menu>
-        <Menu.Item>
-          <img src="/images/martinos-logo.png"/>
-        </Menu.Item>
-        <Menu.Item header>
+        <Menu.Item header fitted="vertically">
+          <img src="/images/martinos-logo-square.png"/>
           Neuroimaging Archive
         </Menu.Item>
         <Menu.Item as={IndexLink}

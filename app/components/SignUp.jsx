@@ -35,7 +35,7 @@ class SignUp extends React.Component {
 
   componentWillUnmount () {
     const {dispatch} = this.props;
-    
+
     if(this.props.auth.error){
       dispatch(actions.authError(null));
     }

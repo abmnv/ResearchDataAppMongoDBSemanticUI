@@ -3,7 +3,7 @@ import {connect} from 'react-redux';
 import * as actions from 'actions';
 import ProgressButton from 'react-progress-button';
 import {Field, reduxForm, formValueSelector} from 'redux-form';
-import {Form, Input, Label, TextArea, Button, Grid, Icon, Progress} from 'semantic-ui-react';
+import {Card, Form, Input, Label, TextArea, Button, Grid, Icon, Progress} from 'semantic-ui-react';
 
 import SimpleFileList from 'SimpleFileList';
 
@@ -88,9 +88,9 @@ class CreateProject extends React.Component {
   // </div>
 
   renderField = ({input, label, placeholder, type, meta: {touched, error}}) => {
-    console.log('renderField title touched, error:', touched, error);
+    //console.log('renderField title touched, error:', touched, error);
     return (
-      <Form.Input inline label={label} id="create-project-form-title" {...input} type={type} placeholder={placeholder} fluid error={touched && error}/>
+      <Form.Input inline fluid label={label} {...input} type={type} placeholder={placeholder} error={touched && error}/>
     );
     // <Form.Field inline>
     //   <label>
@@ -130,7 +130,7 @@ class CreateProject extends React.Component {
   renderTextArea = ({input, label, placeholder, meta: {touched, error}}) => {
     //console.log('renderField description touched, error:', touched, error);
     return (
-      <Form.TextArea inline autoHeight id="create-project-form-description" label={label} placeholder={placeholder} {...input} error={touched && error}/>
+      <Form.TextArea inline autoHeight label={label} placeholder={placeholder} {...input} error={touched && error}/>
     );
     // <fieldset>
     //   <div className="row">
@@ -151,7 +151,7 @@ class CreateProject extends React.Component {
         <Form.Field>
           <label>{label}</label>
           <label htmlFor={input.name}>
-            <span className="mini ui red basic button">Select</span>
+            <span className="mini ui blue basic button">Select</span>
           </label>
           <input type={type} id={input.name} onChange={this.adaptFileEventToValueLogoImage(input.onChange)} style={{display:"none"}}></input>
         </Form.Field>
@@ -187,7 +187,7 @@ class CreateProject extends React.Component {
         <Form.Field>
           <label>{label}</label>
           <label htmlFor={input.name}>
-            <span className="basic red mini ui button">Select</span>
+            <span className="basic blue mini ui button">Select</span>
           </label>
           <input type={type} id={input.name} multiple="multiple" onChange={this.adaptFileEventToValueFileList(input.onChange)} style={{display:"none"}}></input>
         </Form.Field>
@@ -234,14 +234,18 @@ class CreateProject extends React.Component {
   render () {
     return (
       <div>
-        <Form onSubmit={this.props.handleSubmit(this.handleCreateProject)}>
-          <Field name="title" component={this.renderField} type="text" label="Title:" placeholder="My awesome project"/>
-          <Field name="description" component={this.renderTextArea} label="Description:" placeholder="Description of my awesome project"/>
-          <Field name="logoImage" component={this.renderLogoImage} type="file" label="Logo:"/>
-          <Field name="fileList" component={this.renderFileList} type="file" label="Attach Files:"/>
-          <Button primary loading={this.state.loading} floated="right">Save</Button>
-        </Form>
-        <Button negative floated="right" onClick={this.resetForm}>Reset</Button>
+        <Card fluid>
+          <Card.Content>
+            <Form onSubmit={this.props.handleSubmit(this.handleCreateProject)}>
+              <Field name="title" component={this.renderField} type="text" label="Title:" placeholder="My awesome project"/>
+              <Field name="description" component={this.renderTextArea} label="Description:" placeholder="Description of my awesome project"/>
+              <Field name="logoImage" component={this.renderLogoImage} type="file" label="Logo:"/>
+              <Field name="fileList" component={this.renderFileList} type="file" label="Attach Files:"/>
+              <Button primary loading={this.state.loading} floated="right">Save</Button>
+            </Form>
+            <Button negative floated="right" onClick={this.resetForm}>Reset</Button>
+          </Card.Content>
+        </Card>
       </div>
     )
   }

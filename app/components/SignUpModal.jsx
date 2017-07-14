@@ -2,7 +2,7 @@ import React from 'react';
 import {connect} from 'react-redux';
 import {hashHistory, Link} from 'react-router';
 import {Field, reduxForm} from 'redux-form';
-import Modal from 'react-modal';
+import {Modal, Form, Divider, Button, Message} from 'semantic-ui-react';
 
 import * as actions from 'actions';
 
@@ -37,27 +37,25 @@ class SignUpModal extends React.Component {
   constructor(props){
     super(props);
 
-    this.state = {
-      modalIsOpen: false
-    }
+    // this.state = {
+    //   modalIsOpen: false
+    // }
 
-    this.handleOpenModal = this.handleOpenModal.bind(this);
+    // this.handleOpenModal = this.handleOpenModal.bind(this);
     this.handleCloseModal = this.handleCloseModal.bind(this);
   }
 
-  handleOpenModal () {
-    //Close parent modal
-    this.setState({
-      modalIsOpen: true
-    });
-  }
+  // handleOpenModal () {
+  //   //Close parent modal
+  //   this.setState({
+  //     modalIsOpen: true
+  //   });
+  // }
 
   handleCloseModal () {
     const {dispatch} = this.props;
     dispatch(actions.setCurrentModal(null));
     hashHistory.push('/');
-
-
     // this.setState({
     //   modalIsOpen: false
     // });
@@ -89,54 +87,42 @@ class SignUpModal extends React.Component {
   renderField = ({input, label, type, meta: {touched, error}}) => {
     //console.log('renderField touched, error:', touched, error);
     return (
-      <fieldset>
-        <div>
-          <input className="modal-input" {...input} placeholder={label} type={type}/>
-          {touched && error && <div className="login-error">{error}</div>}
-        </div>
-      </fieldset>
+      <Form.Input {...input} placeholder={label} type={type} error={touched && error}/>
     )
+    // <fieldset>
+    //   <div>
+    //     <input className="modal-input" {...input} placeholder={label} type={type}/>
+    //     {touched && error && <div className="login-error">{error}</div>}
+    //   </div>
+    // </fieldset>
   }
 
   renderAuthError () {
     if(this.props.auth.error){
       return (
-        <div className="login-error">
-          {this.props.auth.error}
-        </div>)
+        <Message error content={this.props.auth.error}/>
+      )
+      // <div className="login-error">
+      //   {this.props.auth.error}
+      // </div>
     }else{
       return null;
     }
   }
 
   render () {
-    //const {modalIsOpen} = this.state;
-
-    const customStyles = {
-      content : {
-        top                   : '50%',
-        left                  : '50%',
-        right                 : 'auto',
-        bottom                : 'auto',
-        marginRight           : '-50%',
-        transform             : 'translate(-50%, -50%)',
-        borderRadius          : '5px',
-        padding               : '25px'
-      }
-    };
-
     return (
       <div>
-        <Modal isOpen={true} style={customStyles} onRequestClose={this.handleCloseModal}>
-
-          {this.renderAuthError()}
-
-          <form onSubmit={this.props.handleSubmit(this.handleSignUp)}>
-            <Field name="email" component={this.renderField} type="text" label="Email"/>
-            <Field name="password" component={this.renderField} type="password" label="Password"/>
-            <Field name="passwordConfirmation" component={this.renderField} type="password" label="Password Confirmation"/>
-            <button type="submit" className="button expanded radius">Sign Up</button>
-          </form>
+        <Modal open size="small" onClose={this.handleCloseModal}>
+          <Modal.Content>
+            {this.renderAuthError()}
+            <Form onSubmit={this.props.handleSubmit(this.handleSignUp)}>
+              <Field name="email" component={this.renderField} type="text" label="Email"/>
+              <Field name="password" component={this.renderField} type="password" label="Password"/>
+              <Field name="passwordConfirmation" component={this.renderField} type="password" label="Password Confirmation"/>
+              <Form.Button fluid primary>Sign Up</Form.Button>
+            </Form>
+          </Modal.Content>
         </Modal>
       </div>
     )

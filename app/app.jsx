@@ -39,8 +39,6 @@ ReactDOM.render(
     <Router history={hashHistory}>
       <Route path="/" component={Main}>
         <IndexRoute component={Projects}/>
-        <Route path="/login" component={Login}/>
-        <Route path="/signup" component={SignUp}/>
         <Route path="/projects/:projectId" component={DetailedProject}/>
         <Route component={EnsureLoggedInContainer}>
           <Route path="/edit-projects" component={Projects}/>
@@ -52,4 +50,6 @@ ReactDOM.render(
   </Provider>,
   document.getElementById('app')
 );
+// <Route path="/login" component={Login}/>
+// <Route path="/signup" component={SignUp}/>
 //<Route path="data" component={Data}/>

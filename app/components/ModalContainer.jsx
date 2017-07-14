@@ -8,7 +8,7 @@ class ModalContainer extends React.Component {
 
   render () {
     const {currentModal} = this.props;
-    console.log('currentModal:', currentModal);
+    //console.log('currentModal:', currentModal);
 
     const renderModal = () => {
       switch(currentModal){
