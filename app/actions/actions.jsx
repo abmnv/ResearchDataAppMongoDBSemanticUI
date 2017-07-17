@@ -1,8 +1,7 @@
-//import firebase, {firebaseRef, firebaseStorageRef, githubProvider} from 'app/firebase/';
 import moment from 'moment';
-import * as dbAPI from 'ResearchDataAPI';
+import jwtDecode from 'jwt-decode';
 
-const DEFAULT_IMAGE_URL =  'https://firebasestorage.googleapis.com/v0/b/research-data-app.appspot.com/o/icons%2Fdefault-project.png?alt=media&token=a16a1fa3-df80-4c28-becf-562ff9a61d13';
+import * as dbAPI from 'ResearchDataAPI';
 
 export var setLoadingStatus = (status) => {
   return {
@@ -17,7 +16,6 @@ export var setSearchText = (text) => {
     text
   }
 }
-
 
 export var setActiveProject = (id) => {
   return {
@@ -47,10 +45,11 @@ export const authError = (error) => {
   }
 }
 
-export const authUser = (token) => {
+export const authUser = (token, role) => {
   return {
     type: 'AUTH_USER',
-    token
+    token,
+    role
   }
 }
 
@@ -65,7 +64,8 @@ export const startSignUpUser = (email, password) => {
   return (dispatch, getState) => {
     return dbAPI.signUp(email, password).then((user) => {
       console.log('startSignUpUser user:', user);
-      dispatch(authUser(user.token));
+      const decoded = jwtDecode(user.token);
+      dispatch(authUser(user.token, decoded.role));
       localStorage.setItem('researchDataAppToken', user.token);
     }).catch((err) => {
       console.log('startSignUpUser error:', err);
@@ -90,7 +90,8 @@ export const verifyAuth = () => {
     const token = localStorage.getItem('researchDataAppToken');
     console.log('verifyAuth token:', token);
     if(token){
-      dispatch(authUser(token));
+      const decoded = jwtDecode(token);
+      dispatch(authUser(token, decoded.role));
     }
   }
 }
@@ -101,7 +102,8 @@ export const startEmailPasswordLogin = (email, password) => {
   return (dispatch, getState) => {
     return dbAPI.login(email, password).then((user) => {
       console.log('startEmailPasswordLogin user:', user);
-      dispatch(authUser(user.token));
+      const decoded = jwtDecode(user.token);
+      dispatch(authUser(user.token, decoded.role));
       localStorage.setItem('researchDataAppToken', user.token);
     }).catch((err) => {
       console.log('startEmailPasswordLogin error:', err);

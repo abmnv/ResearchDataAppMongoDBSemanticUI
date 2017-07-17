@@ -395,27 +395,3 @@ EditProject = connect((state, ownProps) => {
 })(EditProject);
 
 export default EditProject;
-
-// export default connect((state, ownProps) => {
-//   const {projects, fileUploadProgress, uploadFileList} = state;
-//   let currentProject;
-//
-//   const {params: {projectId}} = ownProps;
-//
-//   projects.forEach((project) => {
-//     if(project.id === projectId){
-//       //console.log('project:', project);
-//       currentProject = project;
-//     }
-//   });
-//
-//   return {currentProject, fileUploadProgress, uploadFileList};
-// })(EditProject);
-// <label htmlFor="fileUploader" className="column small-3">Attach Files:</label>
-// <button className="button expanded radius" onClick={this.handleSave}>Save</button>
-
-// <div className="row control-bar">
-//   <div className="column small-4 small-offset-8">
-//     <ProgressButton onClick={this.handleSave} state={this.state.buttonStatus} durationSuccess={1000}>Save</ProgressButton>
-//   </div>
-// </div>

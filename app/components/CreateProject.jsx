@@ -43,17 +43,7 @@ class CreateProject extends React.Component {
 
     dispatch(actions.startCreateProject({...values, change})).then(() => {
       reset();
-      // change('title', '');
-      // change('description', '');
-      //change('buttonStatus', 'success');
-      //dispatch(actions.changeCreateProjectButtonStatus('success'));
-      // change('logoImage', '');
-      // change('fileList', '');
-      //Note that because it takes 1s for success status to turn up, set to disable after that time
-      // setTimeout(() => {
-      //   change('buttonStatus', 'disabled');
-      //   //dispatch(actions.changeCreateProjectButtonStatus('disabled'));
-      // }, 1000);
+      
       this.setState({
         loading: false,
       })

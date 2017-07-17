@@ -49,11 +49,42 @@ class Nav extends React.Component {
   handleMenuItemClick = (e, {name}) => {this.setState({activeItem: name})}
 
   render () {
-    const {isAuth} = this.props;
+    const {isAuth, role} = this.props;
+    console.log('role:', role);
     const auth = isAuth ? (<Menu.Item onClick={this.handleLogout}>Logout</Menu.Item>) : (<Menu.Item onClick={this.handleOpenLoginModal}>Login</Menu.Item>);
     //const auth = isAuth ? (<Link activeClassName="active-link" onClick={this.handleLogout}>Logout</Link>) : (<Link activeClassName="active-link" to="/login">Login</Link>);
     //const auth = isAuth ? (<Link activeClassName="active-link" onClick={this.handleLogout}>Logout</Link>) : (<button className='login-button' onClick={this.handleOpenLoginModal}>Login</button>);
-
+    const menu = () => {
+      if(role === 'user' || role === null){
+        return null;
+      } else {
+        return (
+          <Menu.Menu position="left">
+            <Menu.Item as={IndexLink}
+              to="/"
+              name="projects"
+              active={activeItem === 'projects'}
+              onClick={this.handleMenuItemClick}>
+              Projects
+            </Menu.Item>
+            <Menu.Item as={Link}
+              to="/create-project"
+              name='create-project'
+              active={activeItem === 'create-project'}
+              onClick={this.handleMenuItemClick}>
+              Create Project
+            </Menu.Item>
+            <Menu.Item as={Link}
+              to="/edit-projects"
+              name='edit-projects'
+              active={activeItem === 'edit-projects'}
+              onClick={this.handleMenuItemClick}>
+              Edit Projects
+            </Menu.Item>
+          </Menu.Menu>
+        )
+      }
+    }
     const {activeItem} = this.state;
 
     return (
@@ -62,67 +93,17 @@ class Nav extends React.Component {
           <img src="/images/martinos-logo-square.png"/>
           Neuroimaging Archive
         </Menu.Item>
-        <Menu.Item as={IndexLink}
-          to="/"
-          name="projects"
-          active={activeItem === 'projects'}
-          onClick={this.handleMenuItemClick}>
-          Projects
-        </Menu.Item>
-        <Menu.Item as={Link}
-          to="/create-project"
-          name='create-project'
-          active={activeItem === 'create-project'}
-          onClick={this.handleMenuItemClick}>
-          Create Project
-        </Menu.Item>
-        <Menu.Item as={Link}
-          to="/edit-projects"
-          name='edit-projects'
-          active={activeItem === 'edit-projects'}
-          onClick={this.handleMenuItemClick}>
-          Edit Projects
-        </Menu.Item>
+        {menu()}
         <Menu.Menu position="right">
           <Input icon='search' placeholder='Search projects...' />
         </Menu.Menu>
         {auth}
       </Menu>
     );
-    // <div className="top-bar">
-    //   <div className="top-bar-left">
-    //     <ul className="menu">
-    //       <li className="menu-text">
-    //         Neuroimaging Archive
-    //       </li>
-    //       <li>
-    //         <IndexLink activeClassName="active-link" to="/">Projects</IndexLink>
-    //       </li>
-    //       <li>
-    //         <Link activeClassName="active-link" to="/create-project">Create Project</Link>
-    //       </li>
-    //       <li>
-    //         <Link activeClassName="active-link" to="/edit-projects">Edit Projects</Link>
-    //       </li>
-    //     </ul>
-    //   </div>
-    //   <div className="top-bar-right">
-    //     <ul className="menu">
-    //       <li>
-    //         <form onSubmit={this.handleSubmit}>
-    //           <input type="search" ref="projectName" placeholder="Search"/>
-    //         </form>
-    //       </li>
-    //       <li>
-    //         {auth}
-    //       </li>
-    //     </ul>
-    //   </div>
-    // </div>
   }
 }
 
-export default connect(({auth: {isAuth}}) => ({isAuth}), null, null, {pure:false})(Nav);
+export default connect(({auth: {isAuth, role}}) => ({isAuth, role}), null, null, {pure:false})(Nav);
 //export default Nav;
 // <div onClick={this.handleLogout}>
 //   Logout

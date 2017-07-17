@@ -1,5 +1,6 @@
 import React from 'react';
 import {connect} from 'react-redux';
+import {Header} from 'semantic-ui-react';
 
 import * as actions from 'actions';
 import Project from 'Project';
@@ -25,7 +26,7 @@ class ProjectList extends React.Component {
         )
       }else if(projects.length === 0){
         return (
-          <h4>Nothing to show</h4>
+          <Header as="h4" textAlign="center" color="grey">Nothing to show</Header>
         );
       }
 

@@ -22,9 +22,10 @@ const UserSchema = new Schema({
     required: true,
     minlength: 6
   },
-  admin: {
-    type: Boolean,
-    default: false
+  role: {
+    type: String,
+    required: true,
+    default: 'user'
   },
   tokens: [{
     access: {
@@ -52,7 +53,7 @@ UserSchema.statics.findByToken = function(token){
     '_id': decoded.id,
     'tokens.token': token,
     'tokens.access': decoded.access,
-    'admin': decoded.admin
+    'role': decoded.role
   });
 }
 
@@ -91,6 +92,7 @@ UserSchema.methods.genAuthToken = function() {
     id: user._id.toHexString(),
     email: user.email,
     admin: user.admin,
+    role: user.role,
     access
   }, process.env.JWT_SECRET).toString();
 

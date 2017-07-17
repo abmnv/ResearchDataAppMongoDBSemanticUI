@@ -115,6 +115,7 @@ const ProjectSchema = new Schema({
       // minlength: 0
     }
   },
+  managers: [String],
   files: [FileSchema]
 });
 

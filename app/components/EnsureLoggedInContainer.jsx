@@ -24,20 +24,13 @@ var EnsureLoggedInContainer = React.createClass({
   render () {
     const {auth: {isAuth, role}} = this.props;
 
-    if(isAuth && role === 'admin'){
+    if(isAuth && (role === 'admin' || role === 'manager')){
       return (
         this.props.children
       )
-    }else if (isAuth && role !== 'admin'){
+    }else {
       return (
-        <div className="callout callout-auth login-error">
-          <h4>You do not have privilege to modify data. Please, contact your administrator.</h4>
-        </div>
-      );
-    }else{
-      return (
-        <div>
-        </div>
+        <Label basic color="red">You do not have privilege to modify data. Please, contact your administrator.</Label>
       );
     }
   }

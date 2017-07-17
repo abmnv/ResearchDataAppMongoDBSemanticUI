@@ -9,7 +9,7 @@ const JSZip = require('jszip') ;
 const {mongoose} = require('./db/mongoose');
 const {Project} = require('./models/Project');
 const {User} = require('./models/User');
-const {authenticate, authAdmin} = require('./middleware/authenticate');
+const {authenticate, authAdmin, authManagerOrAdmin, authAllowedManagerOrAdmin} = require('./middleware/authenticate');
 
 var path = require('path');
 var env = require('node-env-file');
@@ -106,7 +106,7 @@ app.get('/projects/:projectId/files/:fileId', authenticate, (req, res) => {
   });
 });
 
-app.post('/projects/:projectId/files', authenticate, authAdmin, upload.single('dataFiles'), (req, res) => {
+app.post('/projects/:projectId/files', authenticate, authAllowedManagerOrAdmin, upload.single('dataFiles'), (req, res) => {
   const projectId = req.params.projectId;
 
   if(!req.file){
@@ -134,7 +134,7 @@ app.post('/projects/:projectId/files', authenticate, authAdmin, upload.single('d
   })
 });
 
-app.delete('/projects/:projectId/files/:fileId', authenticate, authAdmin, (req, res) => {
+app.delete('/projects/:projectId/files/:fileId', authenticate, authAllowedManagerOrAdmin, (req, res) => {
   const projectId = req.params.projectId;
   const fileId = req.params.fileId;
   //let fileDoc;
@@ -169,7 +169,7 @@ app.delete('/projects/:projectId/files/:fileId', authenticate, authAdmin, (req, 
   });
 });
 
-app.patch('/projects/:projectId', authenticate, authAdmin, upload.array('dataFiles', 20), (req, res) => {
+app.patch('/projects/:projectId', authenticate, authAllowedManagerOrAdmin,  upload.array('dataFiles', 20), (req, res) => {
   //console.log('req.body:', req.body);
   const projectId = req.params.projectId;
   const body = _.pick(req.body, ['title', 'description']);
@@ -211,7 +211,7 @@ app.patch('/projects/:projectId', authenticate, authAdmin, upload.array('dataFil
 });
 
 
-app.delete('/projects/:projectId', authenticate, authAdmin, (req, res) => {
+app.delete('/projects/:projectId', authenticate, authAllowedManagerOrAdmin, (req, res) => {
   //console.log('projectId:', req.params.projectId);
   Project.findByIdAndRemove(req.params.projectId).then((doc) => {
     //console.log('doc:', doc);
@@ -228,7 +228,7 @@ app.delete('/projects/:projectId', authenticate, authAdmin, (req, res) => {
 });
 
 
-app.post('/projects', authenticate, authAdmin, upload.fields([{
+app.post('/projects', authenticate, authManagerOrAdmin, upload.fields([{
   name: 'dataFiles',
   maxCount: 50
 }, {
@@ -237,11 +237,13 @@ app.post('/projects', authenticate, authAdmin, upload.fields([{
 }]), (req, res) => {
   //console.log(req.body);
   //console.log(req.files.logo);
+  const user = req.user;
 
   const body = _.pick(req.body, ['title', 'description']);
   const project = new Project(body);
   project.createdAt = Math.floor((new Date().getTime())/1000);
-  //console.log('project:', project);
+  project.managers.push(user._id);
+  //console.log('project:', project);s
 
   const projectId = project._id;
 

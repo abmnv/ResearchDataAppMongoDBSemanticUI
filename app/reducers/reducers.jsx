@@ -1,5 +1,4 @@
 import moment from 'moment';
-import jwtDecode from 'jwt-decode';
 
 // Note that myFile is an object that contains file DOM object and progress variable
 export var fileUploadListReducer = (state = [], action) => {
@@ -119,13 +118,11 @@ export var projectReducer = (state = [], action) => {
 export const authReducer = (state = {isAuth: false, error: null, role: null, token: null}, action) => {
   switch(action.type) {
     case 'AUTH_USER':
-      const decoded = jwtDecode(action.token);
-      console.log('AUTH_USER decoded:', decoded);
       return {
         ...state,
         isAuth: true,
         error: null,
-        role: decoded.admin ? 'admin' : null,
+        role: action.role,
         token: action.token
       };
     case 'AUTH_ERROR':
