@@ -164,29 +164,48 @@ ProjectSchema.method('toClient', function() {
   return obj;
 });
 
+ProjectSchema.methods.updateLogoImage = function(logoImage) {
+  const project = this;
+
+  //remove the old one
+  return fsp.remove(`./public${project.logoImage.url}`).then(() => {
+    //console.log('removed file:', `./public${project.logoImage.url}`);
+    //copy from /upload to /public/data directory
+    const newPath = `/data/${project._id}/${logoImage.name}`;
+    project.logoImage.name = logoImage.name;
+    project.logoImage.url = newPath;
+    return fsp.rename(logoImage.url, `./public${newPath}`);
+  }).then(() => {
+    // console.log('uploadLogoImage then');
+    return project.save();
+  }).catch((err) => {
+    return Promise.reject(err);
+  });
+}
+
 ProjectSchema.pre('save', function(next) {
   if(this.isNew) {
     // console.log('inside pre save');
     // console.log('this:', this);
 
-    if(this.logoImage.name){
-      //const newPath = `./public/data/${this._id}/${this.logo.name}`;
-      fsp.mkdirp(`./public/data/${this._id}`).then(() => {
+    // if(this.logoImage.name){
+    //const newPath = `./public/data/${this._id}/${this.logo.name}`;
+    fsp.mkdirp(`./public/data/${this._id}`).then(() => {
       //   console.log('created dir:', `./public/${projectId}`);
-        return fsp.rename(this.logoImage.url, `./public/data/${this._id}/${this.logoImage.name}`);
-      }).then(() => {
-        this.logoImage.url = `/data/${this._id}/${this.logoImage.name}`;
-        next();
-      }).catch((err) => {
-        next(new Error(err));
-      });
-    }else{
-      this.logoImage = {
-        name: 'default-project.png',
-        url: '/images/default-project.png'
-      }
+      return fsp.rename(this.logoImage.url, `./public/data/${this._id}/${this.logoImage.name}`);
+    }).then(() => {
+      this.logoImage.url = `/data/${this._id}/${this.logoImage.name}`;
       next();
-    }
+    }).catch((err) => {
+      next(new Error(err));
+    });
+    // }else{
+    //   this.logoImage = {
+    //     name: 'default-project.png',
+    //     url: '/images/default-project.png'
+    //   }
+    //   next();
+    // }
   }else{
     next();
   }

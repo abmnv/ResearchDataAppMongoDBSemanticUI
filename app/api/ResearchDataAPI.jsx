@@ -79,11 +79,12 @@ export const createProject = (formData, token, uploadProgress) => {
   });
 }
 
-export const updateProject = (projectId, formData, token) => {
+export const updateProject = (projectId, formData, uploadProgress, token) => {
   const config = {
     headers: {
       'x-auth': token
-    }
+    },
+    onUploadProgress: uploadProgress
   }
   return axios.patch(`/projects/${projectId}`, formData, config).then((res) => {
     //console.log('axios updateProject:', res.data);

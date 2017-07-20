@@ -359,15 +359,27 @@ export var updateProject = (project) => {
   }
 }
 
-export var startUpdateProject = ({id, title, description, fileList, uploadFileList=[], change, array}) => {
+export var startUpdateProject = ({id, title, description, logoImage=null, fileList, uploadFileList=[], change, array}) => {
   return (dispatch, getState) => {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
+    let uploadProgress = null;
+
+    if(logoImage){
+      formData.append('logoImage', logoImage.file);
+      uploadProgress = (e) => {
+          const progress = (100.0 * e.loaded) / e.total;
+          change(`logoImage.progress`, progress);
+          //dispatch(actions.updateFileUploadProgress(filename, progress));
+      }
+    }
 
     const {auth: {token}} = getState();
-    return dbAPI.updateProject(id, formData, token).then(() => {
-      dispatch(updateProject({id, title, description}));
+    return dbAPI.updateProject(id, formData, uploadProgress, token).then((project) => {
+      const {logoImage} = project;
+      dispatch(updateProject({id, title, description, logoImage}));
+      change(`logoImage`, null);
 
       let seq = Promise.resolve();
 

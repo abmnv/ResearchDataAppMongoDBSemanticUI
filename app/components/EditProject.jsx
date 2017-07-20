@@ -2,11 +2,26 @@ import React from 'react';
 import {connect} from 'react-redux';
 import {Field, FieldArray, reduxForm, formValueSelector} from 'redux-form';
 import ProgressButton from 'react-progress-button';
-import {Card, Form, Input, Label, TextArea, Button, Grid, Icon, Progress, Checkbox} from 'semantic-ui-react';
+import {Card, Form, Input, Label, TextArea, Button, Grid, Icon, Progress, Checkbox, Image} from 'semantic-ui-react';
 
 import FileList from 'FileList';
 import SimpleFileList from 'SimpleFileList';
 import * as actions from 'actions';
+
+const validate = (values) => {
+  const errors = {};
+  //console.log('Validate values:', values);
+
+  if(!values.title){
+    errors.title = 'Please enter title'
+  }
+
+  if(!values.description){
+    errors.description = 'Please enter description'
+  }
+
+  return errors;
+}
 
 class EditProject extends React.Component {
 //var EditProject = React.createClass({
@@ -111,6 +126,15 @@ class EditProject extends React.Component {
   //   }
   //   //console.log(name, ':', e.target.value);
   // }
+  adaptFileEventToValueLogoImage = (inputOnChange) => {
+    return (e) => {
+      //Note that I have to check if logoImage exists on the props if it exists use its progress value
+      return inputOnChange({file: e.target.files[0], progress: 0});
+      //return inputOnChange({file: e.target.files[0], progress: (this.props.logoImage ? this.props.logoImage.progress : 0)});
+    }
+  }
+
+
   adaptFileEventToValueFileList = (inputOnChange) => {
     return (e) => {
       const files = [...e.target.files].map((file, i) => {
@@ -155,36 +179,21 @@ class EditProject extends React.Component {
     // </fieldset>
   }
 
-  renderUploadFileList = ({input, label, type}) => {
-    //console.log('renderFileUploader this.fileUploader', this.fileUploader);
+  renderLogoImage = ({input, label, type, path}) => {
+    //console.log('renderLogoImage logoImage:', this.props.logoImage);
     return (
       <div>
+        <label className="label bold">{label}</label><br/>
+        <Image size="tiny" className="small-top-margin small-bottom-margin" src={path}/>
         <Form.Field>
-          <label>{label}</label>
           <label htmlFor={input.name}>
-            <span className="basic blue mini ui button">Select</span>
+            <span className="mini ui blue basic button">Select</span>
           </label>
-          <input type={type} id={input.name} multiple="multiple" onChange={this.adaptFileEventToValueFileList(input.onChange)} style={{display:"none"}}></input>
+          <input type={type} id={input.name} onChange={this.adaptFileEventToValueLogoImage(input.onChange)} style={{display:"none"}}></input>
         </Form.Field>
-        <SimpleFileList fileList={input.value ? input.value : []}/>
+        <SimpleFileList fileList={input.value ? [input.value] : []}/>
       </div>
-    )
-    // <fieldset>
-    //   <div className="row">
-    //     <p className="column small-3 project-label">
-    //       {label}
-    //     </p>
-    //     <div className="column small-2 end text-align-left">
-    //       <label htmlFor={input.name} className="button tiny radius">Select</label>
-    //       <input type={type} id={input.name} multiple="multiple" className="show-for-sr" onChange={this.adaptFileEventToValueFileList(input.onChange)}></input>
-    //     </div>
-    //   </div>
-    //   <div className="row">
-    //     <div className="column small-offset-3 small-9 text-align-left">
-    //       <SimpleFileList fileList={input.value ? input.value : []}/>
-    //     </div>
-    //   </div>
-    // </fieldset>
+    );
   }
 
   renderFields = ({fields}) => {
@@ -266,9 +275,41 @@ class EditProject extends React.Component {
     //<label className="column small-10 project-label" htmlFor={input.value}>
   }
 
+  renderUploadFileList = ({input, label, type}) => {
+    //console.log('renderFileUploader this.fileUploader', this.fileUploader);
+    return (
+      <div>
+        <Form.Field>
+          <label>{label}</label>
+          <label htmlFor={input.name}>
+            <span className="basic blue mini ui button">Select</span>
+          </label>
+          <input type={type} id={input.name} multiple="multiple" onChange={this.adaptFileEventToValueFileList(input.onChange)} style={{display:"none"}}></input>
+        </Form.Field>
+        <SimpleFileList fileList={input.value ? input.value : []}/>
+      </div>
+    )
+    // <fieldset>
+    //   <div className="row">
+    //     <p className="column small-3 project-label">
+    //       {label}
+    //     </p>
+    //     <div className="column small-2 end text-align-left">
+    //       <label htmlFor={input.name} className="button tiny radius">Select</label>
+    //       <input type={type} id={input.name} multiple="multiple" className="show-for-sr" onChange={this.adaptFileEventToValueFileList(input.onChange)}></input>
+    //     </div>
+    //   </div>
+    //   <div className="row">
+    //     <div className="column small-offset-3 small-9 text-align-left">
+    //       <SimpleFileList fileList={input.value ? input.value : []}/>
+    //     </div>
+    //   </div>
+    // </fieldset>
+  }
+
   render () {
     //const {filesSelection} = this.state;
-    const {files, id, buttonStatus} = this.props;
+    const {files, id, buttonStatus, logoImage} = this.props;
 
     return (
       <div>
@@ -277,6 +318,7 @@ class EditProject extends React.Component {
             <Form onSubmit={this.props.handleSubmit(this.handleUpdateProject)}>
               <Field name="title" component={this.renderField} type="text" label="Title:"/>
               <Field name="description" component={this.renderTextArea} label="Description:"/>
+              <Field name="logoImage" component={this.renderLogoImage} type="file" label="Logo:" path={logoImage.url}/>
               <FieldArray name="fileList" component={this.renderFields}/>
               <Field name="uploadFileList" component={this.renderUploadFileList} type="file" label="Attach Files:"/>
               <Button primary loading={this.state.loading} floated="right">Save</Button>
@@ -285,82 +327,14 @@ class EditProject extends React.Component {
         </Card>
       </div>
     )
-    // <div className="create-project">
-    //   <form onSubmit={this.props.handleSubmit(this.handleUpdateProject)}>
-    //     <Field name="title" component={this.renderField} type="text" label="Title:"/>
-    //     <Field name="description" component={this.renderTextArea} label="Description:"/>
-    //     <FieldArray name="fileList" component={this.renderFields}/>
-    //     <Field name="uploadFileList" component={this.renderUploadFileList} type="file" label="Attach Files:"/>
-    //     <div className="row control-bar">
-    //       <div className="column small-offset-8 small-4">
-    //         <ProgressButton state={buttonStatus} durationSuccess={1000}>Save</ProgressButton>
-    //       </div>
-    //     </div>
-    //     <Field name="buttonStatus" component="input" type="hidden"/>
-    //   </form>
-    // </div>
-
-    // <div className="row">
-    //   <label htmlFor="files" className="column small-3 project-label">Files:</label>
-    //   <div className="column small-9">
-    //     <FileList files={files} projectId={id} editModeStatus={true} filesSelection={filesSelection}/>
-    //   </div>
-    // </div>
-
-    //const {title, description, createdAt, id, files, filesSelection} = this.state;
-
-    //const renderUploadFileList = <SimpleFileList fileList={this.props.uploadFileList}/>;
-    //const renderUploadFileList = this.props.uploadFileList ? <SimpleFileList fileList={[...this.props.uploadFileList]} fileUploadProgress={this.props.fileUploadProgress}/> : null;
-    //const renderUploadFileList = this.state.uploadFileList ? <SimpleFileList fileList={[...this.state.uploadFileList]} fileUploadProgress={this.props.fileUploadProgress}/> : null;
-
-    // return (
-    //   <div className="edit-project">
-    //     <div className="row">
-    //       <label htmlFor="title" className="column small-3 project-label">Title:</label>
-    //       <div className="column small-9">
-    //         <input type="text" name="title" onChange={this.handleInputChange} value={this.state.title}></input>
-    //       </div>
-    //     </div>
-    //     <div className="row">
-    //       <label htmlFor="description" className="column small-3 project-label">Description:</label>
-    //       <div className="column small-9">
-    //         <textarea rows="3" name="description" onChange={this.handleInputChange} value={this.state.description}></textarea>
-    //       </div>
-    //     </div>
-    //     <div className="row">
-    //       <label htmlFor="files" className="column small-3 project-label">Files:</label>
-    //       <div className="column small-9">
-    //         <FileList files={this.props.currentProject.files} projectId={id} editModeStatus={true} filesSelection={filesSelection}/>
-    //       </div>
-    //     </div>
-    //     <div className="row">
-    //       <p className="column small-3 project-label">
-    //         Attach files:
-    //       </p>
-    //       <div className="column small-9">
-    //         <div className="row">
-    //           <div className="column small-offset-9 small-3 right-text-align">
-    //             <label htmlFor="fileUploader" className="button tiny radius">Select</label>
-    //             <input type="file" id="fileUploader" name="fileUploader" ref="fileUploader" multiple="multiple" className={"show-for-sr"} onChange={this.handleInputChange}/>
-    //           </div>
-    //         </div>
-    //         {renderUploadFileList}
-    //       </div>
-    //     </div>
-    //     <div className="edit-save-button-container">
-    //       <div className="edit-save-button">
-    //         <ProgressButton onClick={this.handleSave} state={this.state.buttonStatus} durationSuccess={1000}>Save</ProgressButton>
-    //       </div>
-    //     </div>
-    //   </div>
-    // )
   }
 };
 
 const selector = formValueSelector('editProject');
 
 EditProject = reduxForm({
-  form: 'editProject'
+  form: 'editProject',
+  validate
 })(EditProject);
 
 EditProject = connect((state, ownProps) => {

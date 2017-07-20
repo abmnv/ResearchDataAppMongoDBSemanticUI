@@ -94,7 +94,7 @@ export var projectReducer = (state = [], action) => {
       });
     case 'DELETE_PROJECT':
       return state.filter((project) => {
-        return project.id === action.id ? false : true;
+        return  project.id !== action.id; //project.id === action.id ? false : true;
       });
     case 'DELETE_FILE':
       return state.map((project) => {

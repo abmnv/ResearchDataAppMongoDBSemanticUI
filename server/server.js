@@ -144,7 +144,7 @@ app.delete('/projects/:projectId/files/:fileId', authenticate, authAllowedManage
   Project.findById(projectId).then((project) => {
 
     if(!project){
-      throw new Error('NotFound');
+      return Promise.reject('NotFound');
       //return new res.status(404).send();
     }
     //myProject = project;
@@ -153,7 +153,7 @@ app.delete('/projects/:projectId/files/:fileId', authenticate, authAllowedManage
     myDoc = project.files.id(fileId);
     console.log('inside findById doc:', myDoc);
     if(!myDoc){
-      throw new Error('NotFound');
+      return Promise.reject('NotFound');
     }
 
     //return project.files.pull(fileId);
@@ -162,28 +162,72 @@ app.delete('/projects/:projectId/files/:fileId', authenticate, authAllowedManage
   }).then((docs) => {
     res.send(myDoc);
   }).catch((err) => {
-    if(err.message === 'NotFound'){
+    if(err === 'NotFound'){
       return res.status(404).send();
     }
     res.status(400).send(err);
   });
 });
 
-app.patch('/projects/:projectId', authenticate, authAllowedManagerOrAdmin,  upload.array('dataFiles', 20), (req, res) => {
+app.patch('/projects/:projectId', authenticate, authAllowedManagerOrAdmin, upload.fields([{
+  name: 'dataFiles',
+  maxCount: 50
+}, {
+  name: 'logoImage',
+  maxCount: 1
+}]), (req, res) => {
   //console.log('req.body:', req.body);
   const projectId = req.params.projectId;
   const body = _.pick(req.body, ['title', 'description']);
   //console.log('req.files:', req.files);
 
-  Project.findByIdAndUpdate(req.params.projectId, {$set: body}, {new: true}).then((doc) => {
+  let logoImage = null;
+  if(req.files.logoImage){
+    logoImage = {
+      name: req.files.logoImage[0].originalname,
+      url: req.files.logoImage[0].path
+    };
+  }
+
+  console.log('logoImage:', logoImage);
+
+  Project.findById(projectId).then((project) => {
+    if(!project){
+      return Promise.reject('NotFound');
+    }
+
+    Object.keys(body).forEach((key) => {
+      project[key] = body[key];
+    });
+
+    if(logoImage){
+      return project.updateLogoImage(logoImage);
+    }else{
+      return project.save();
+    }
+  }).then((doc) => {
+    // console.log('doc:', doc);
     if(!doc){
-      return res.status(404).send();
+      return Promise.reject('NotFound');
     }
     res.send(doc.toClient());
   }).catch((err) => {
-    res.status(400).send(err);
+    // console.log('error:', err);
+    if(err === 'NotFound'){
+      return res.status(404).send();
+    }else{
+      res.status(400).send(err);
+    }
   });
 
+  // Project.findByIdAndUpdate(req.params.projectId, {$set: body}, {new: true}).then((doc) => {
+  //   if(!doc){
+  //     return res.status(404).send();
+  //   }
+  //   res.send(doc.toClient());
+  // }).catch((err) => {
+  //   res.status(400).send(err);
+  // });
 
   // Project.findById(projectId).then((project) => {
   //
@@ -260,8 +304,8 @@ app.post('/projects', authenticate, authManagerOrAdmin, upload.fields([{
     };
   }else{
     project.logoImage = {
-      name: null,
-      url: null
+      name: 'default-project.png',
+      url: 'public/images/default-project.png'
     }
   }
 
