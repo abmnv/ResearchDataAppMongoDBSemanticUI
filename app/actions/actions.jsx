@@ -60,9 +60,9 @@ export const setCurrentModal = (currentModal) => {
   }
 }
 
-export const startSignUpUser = (email, password) => {
+export const startSignUpUser = (username, email, password) => {
   return (dispatch, getState) => {
-    return dbAPI.signUp(email, password).then((user) => {
+    return dbAPI.signUp(username, email, password).then((user) => {
       console.log('startSignUpUser user:', user);
       const decoded = jwtDecode(user.token);
       dispatch(authUser(user.token, decoded.role));
@@ -96,15 +96,16 @@ export const verifyAuth = () => {
   }
 }
 
-export const startEmailPasswordLogin = (email, password) => {
-  console.log('email:', email);
+export const startUsernamePasswordLogin = (username, password) => {
+  console.log('username:', username);
   console.log('password:', password);
   return (dispatch, getState) => {
-    return dbAPI.login(email, password).then((user) => {
+    return dbAPI.login(username, password).then((user) => {
       console.log('startEmailPasswordLogin user:', user);
       const decoded = jwtDecode(user.token);
       dispatch(authUser(user.token, decoded.role));
       localStorage.setItem('researchDataAppToken', user.token);
+      return Promise.resolve();
     }).catch((err) => {
       console.log('startEmailPasswordLogin error:', err);
       dispatch(authError(err));
@@ -212,23 +213,74 @@ export var startDeleteProject = (projectId) => {
 //   }
 // }
 
-export var addProjects = (projects) => {
+export const addProjects = (projects) => {
   return {
     type: 'ADD_PROJECTS',
     projects
   }
 }
 
-export var startAddProjects = () => {
+export const startAddState = () => {
   return (dispatch, getState) => {
     dispatch(setLoadingStatus(true));
+    dispatch(startAddProjects()).then(() => {
+      dispatch(startAddUsers());
+    }).then(() => {
+      dispatch(setLoadingStatus(false));
+    }).catch((err) => {
+      console.log(err);
+    });
+  }
+}
 
-    dbAPI.getProjects().then((projects) => {
+export const startAddProjects = () => {
+  return (dispatch, getState) => {
+    return dbAPI.getProjects().then((projects) => {
       //console.log('projects:', projects);
       // console.log('newProjects:', newProjects);
       dispatch(addProjects(projects));
-      dispatch(setLoadingStatus(false));
+    }).catch((err) => {
+      return Promise.reject(err);
     });
+  }
+}
+
+export const startAddUsers = () => {
+  return (dispatch, getState) => {
+    const {auth: {isAuth, role, token}} = getState();
+
+    if(isAuth && (role === 'manager' || role === 'admin')){
+      return dbAPI.getUsers(token).then((users) => {
+        console.log('users:', users);
+        dispatch(addUsers(users));
+      }).catch((err) => {
+        return Promise.reject();
+      });
+    }
+  }
+}
+
+export const addUsers = (users) => {
+  return {
+    type: 'ADD_USERS',
+    users
+  }
+}
+
+export const startUpdateProjectManagers = (id, managers) => {
+  return (dispatch, getState) => {
+    const {auth: {token}} = getState();
+    return dbAPI.updateProjectManagers(id, managers, token).then(() => {
+      dispatch(updateProjectManagers(id, managers));
+    });
+  }
+}
+
+export const updateProjectManagers = (id, managers) => {
+  return {
+    type: 'UPDATE_PROJECT_MANAGERS',
+    id,
+    managers
   }
 }
 

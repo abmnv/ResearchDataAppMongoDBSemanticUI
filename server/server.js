@@ -33,6 +33,7 @@ app.get('/projects', (req, res) => {
   });
 });
 
+
 app.get('/projects/:projectId/files', (req, res) => {
   const projectId = req.params.projectId;
   console.log('query params:', req.query);
@@ -59,7 +60,6 @@ app.get('/projects/:projectId/files', (req, res) => {
 
       zip.file(doc.name, fs.readFileSync(path));
     });
-
 
     res.setHeader('Content-disposition', 'attachment; filename=data.zip');
     res.setHeader('Content-Type', 'application/zip');
@@ -254,6 +254,32 @@ app.patch('/projects/:projectId', authenticate, authAllowedManagerOrAdmin, uploa
   // });
 });
 
+app.patch('/project/:projectId/managers', authenticate, authAllowedManagerOrAdmin, (res, req) => {
+  const projectId = req.params.projectId;
+  const body = _.pick(req.body, 'managers');
+
+  Project.findById(projectId).then((project) => {
+    if(!project){
+      return Promise.reject('NotFound');
+    }
+
+    project.managers = body.managers;
+    return project.save();
+  }).then((doc) => {
+    if(!doc){
+      return Promise.reject('NotFound');
+    }
+    res.send(doc.toClient());
+  }).catch((err) => {
+    // console.log('error:', err);
+    if(err === 'NotFound'){
+      return res.status(404).send();
+    }else{
+      res.status(400).send(err);
+    }
+  });
+});
+
 
 app.delete('/projects/:projectId', authenticate, authAllowedManagerOrAdmin, (req, res) => {
   //console.log('projectId:', req.params.projectId);
@@ -286,7 +312,7 @@ app.post('/projects', authenticate, authManagerOrAdmin, upload.fields([{
   const body = _.pick(req.body, ['title', 'description']);
   const project = new Project(body);
   project.createdAt = Math.floor((new Date().getTime())/1000);
-  project.managers.push(user._id);
+  project.managers.push(user.username);
   //console.log('project:', project);s
 
   const projectId = project._id;
@@ -316,7 +342,7 @@ app.post('/projects', authenticate, authManagerOrAdmin, upload.fields([{
   });
 });
 
-app.get('/users', authenticate, authAdmin, (req, res) => {
+app.get('/users', authenticate, authManagerOrAdmin, (req, res) => {
   User.find({}).then((docs) => {
     res.send(docs);
   }).catch((err) => {
@@ -325,7 +351,7 @@ app.get('/users', authenticate, authAdmin, (req, res) => {
 });
 
 app.post('/users', (req, res) => {
-  const body = _.pick(req.body, ['email', 'password']);
+  const body = _.pick(req.body, ['username', 'email', 'password']);
   //console.log('body:', body);
 
   const user = new User(body);
@@ -336,9 +362,11 @@ app.post('/users', (req, res) => {
   }).then((token) => {
     res.header('x-auth', token).send(user);
   }).catch((err) => {
-    //console.log('post err:', err);
-    if(err.name = 'MongoError' && err.code === 11000){
+    //console.log('POST /users err:', err);
+    if(err.name = 'MongoError' && err.code === 11000 && err.message.indexOf('email')>0){
       res.status(400).send({message: 'This email address is already used!'});
+    }else if(err.name = 'MongoError' && err.code === 11000 && err.message.indexOf('username')>0){
+      res.status(400).send({message: 'This username is already used!'});
     }else{
       res.status(400).send(err);
     }
@@ -346,9 +374,9 @@ app.post('/users', (req, res) => {
 });
 
 app.post('/users/login', (req, res) => {
-  const body = _.pick(req.body, ['email', 'password']);
+  const body = _.pick(req.body, ['username', 'password']);
 
-  User.findByCredentials(body.email, body.password).then((user) => {
+  User.findByCredentials(body.username, body.password).then((user) => {
     return user.genAuthToken().then((token) => {
       res.header('x-auth', token).send(user);
     });

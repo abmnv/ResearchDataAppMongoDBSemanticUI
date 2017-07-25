@@ -83,6 +83,13 @@ class Nav extends React.Component {
             </Menu.Item>
           </Menu.Menu>
         )
+        // <Menu.Item as={Link}
+        //   to="/manage-project"
+        //   name="manage-project"
+        //   active={activeItem === "manage-project"}
+        //   onClick={this.handleMenuItemClick}>
+        //   Manage Project
+        // </Menu.Item>
       }
     }
     const {activeItem} = this.state;

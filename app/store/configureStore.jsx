@@ -8,6 +8,7 @@ export var configure = () => {
 
   var reducer = redux.combineReducers({
     projects: reducers.projectReducer,
+    users: reducers.userReducer,
     activeProjectId: reducers.activeProjectReducer,
     //editModeStatus: reducers.editModeStatusReducer,
     isLoading: reducers.setLoadingStatusReducer,

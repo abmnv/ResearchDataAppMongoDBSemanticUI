@@ -44,7 +44,7 @@ const authAllowedManagerOrAdmin = (req, res, next) => {
       if(!project){
         return Promise.reject('NotFound');
       }
-      
+
       let allowed = false;
       project.managers.forEach((userId) => {
         if(user._id.toHexString() === userId){
@@ -63,8 +63,8 @@ const authAllowedManagerOrAdmin = (req, res, next) => {
       }
       res.status(400).send(err);
     });
-  }else if(role === 'admin'){
-    next()
+  }else if(user.role === 'admin'){
+    next();
   }
 }
 

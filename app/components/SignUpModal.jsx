@@ -10,6 +10,10 @@ const validate = (values) => {
   const errors = {};
   console.log('Validate values:', values);
 
+  if(!values.username){
+    errors.username = 'Please enter username';
+  }
+
   if(!values.email){
     errors.email = 'Please enter email'
   }else if(!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)){
@@ -69,10 +73,10 @@ class SignUpModal extends React.Component {
     }
   }
 
-  handleSignUp = ({email, password}) => {
+  handleSignUp = ({username, email, password}) => {
     //console.log('handleEmailPasswordSubmit values:', values);
     const {dispatch, change, untouch} = this.props;
-    dispatch(actions.startSignUpUser(email, password)).then(() => {
+    dispatch(actions.startSignUpUser(username, email, password)).then(() => {
       dispatch(actions.setCurrentModal(null));
       // dispatch(actions.setRedirectUrl('/'));
       // hashHistory.push(this.props.redirectUrl);
@@ -113,10 +117,11 @@ class SignUpModal extends React.Component {
   render () {
     return (
       <div>
-        <Modal open size="small" onClose={this.handleCloseModal}>
+        <Modal open size="tiny" onClose={this.handleCloseModal}>
           <Modal.Content>
             {this.renderAuthError()}
             <Form onSubmit={this.props.handleSubmit(this.handleSignUp)}>
+              <Field name="username" component={this.renderField} type="text" label="Username"/>
               <Field name="email" component={this.renderField} type="text" label="Email"/>
               <Field name="password" component={this.renderField} type="password" label="Password"/>
               <Field name="passwordConfirmation" component={this.renderField} type="password" label="Password Confirmation"/>

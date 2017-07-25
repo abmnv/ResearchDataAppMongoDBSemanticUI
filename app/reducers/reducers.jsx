@@ -67,7 +67,7 @@ export var fileUploadListReducer = (state = [], action) => {
 //   }
 // }
 
-export var projectReducer = (state = [], action) => {
+export const projectReducer = (state = [], action) => {
   switch(action.type){
     case 'ADD_PROJECT':
       return [
@@ -109,7 +109,27 @@ export var projectReducer = (state = [], action) => {
         }else{
           return project;
         }
-      })
+      });
+    case 'UPDATE_PROJECT_MANAGERS':
+      return state.map((project) => {
+        if(project.id === action.id){
+          return {...project, managers: action.managers}
+        }else{
+          return project
+        }
+      });
+    default:
+      return state;
+  }
+}
+
+export const userReducer = (state = [], action) => {
+  switch(action.type) {
+    case 'ADD_USERS':
+      return [
+        ...state,
+        ...action.users
+      ];
     default:
       return state;
   }

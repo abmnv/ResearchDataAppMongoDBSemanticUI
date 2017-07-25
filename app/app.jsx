@@ -13,6 +13,7 @@ import CreateProject from 'CreateProject';
 import Login from 'Login';
 import SignUp from 'SignUp';
 import EnsureLoggedInContainer from 'EnsureLoggedInContainer';
+import ManageProject from 'ManageProject';
 //import 'semantic-ui-css/semantic.min.css';
 
 var store = require('configureStore').configure();
@@ -20,7 +21,7 @@ var state = store.getState();
 console.log('Init state:', state);
 
 store.dispatch(actions.verifyAuth());
-store.dispatch(actions.startAddProjects());
+store.dispatch(actions.startAddState());
 
 // var store = require('configureStore').configure();
 store.subscribe(() => {
@@ -43,7 +44,8 @@ ReactDOM.render(
         <Route component={EnsureLoggedInContainer}>
           <Route path="/edit-projects" component={Projects}/>
           <Route path="/create-project" component={CreateProject}/>
-          <Route path="/edit-projects/:projectId" component={EditProject}/>
+          <Route path="/edit-projects/:projectId/edit" component={EditProject}/>
+          <Route path="/edit-projects/:projectId/manage" component={ManageProject}/>
         </Route>
       </Route>
     </Router>

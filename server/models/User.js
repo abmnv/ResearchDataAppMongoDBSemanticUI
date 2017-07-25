@@ -6,6 +6,13 @@ const jwt = require('jsonwebtoken');
 const Schema = mongoose.Schema;
 
 const UserSchema = new Schema({
+  username: {
+    type: String,
+    required: true,
+    trim: true,
+    minlength: 1,
+    unique: true,
+  },
   email: {
     type: String,
     required: true,
@@ -57,19 +64,19 @@ UserSchema.statics.findByToken = function(token){
   });
 }
 
-UserSchema.statics.findByCredentials = function(email, password) {
+UserSchema.statics.findByCredentials = function(username, password) {
   const User = this;
 
-  return User.findOne({email}).then((user) => {
+  return User.findOne({username}).then((user) => {
     if(!user){
-      return Promise.reject('Email is not found');
+      return Promise.reject('Username is not found');
     }
 
     return bcrypt.compare(password, user.password).then((res) => {
       if(res){
         return user;
       }else{
-        return Promise.reject('Password does not match');
+        return Promise.reject('Username/password do not match');
       }
     });
   });
@@ -79,8 +86,12 @@ UserSchema.methods.toJSON = function() {
   const user = this;
 
   //const userObj = user.toObject();
-
-  return {id: user._id, email: user.email, admin: user.admin}
+  return {
+    id: user._id,
+    username: user.username,
+    email: user.email,
+    role: user.role
+  }
 }
 
 UserSchema.methods.genAuthToken = function() {
@@ -90,6 +101,7 @@ UserSchema.methods.genAuthToken = function() {
 
   const token = jwt.sign({
     id: user._id.toHexString(),
+    username: user.username,
     email: user.email,
     admin: user.admin,
     role: user.role,

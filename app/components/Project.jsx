@@ -40,12 +40,18 @@ class Project extends React.Component {
       if(editModeStatus){
         return (
           <Card.Content extra>
-            <div className='ui two buttons'>
-              <Button negative basic color="red" size="tiny" onClick={this.handleDeleteProject}>Delete</Button>
-              <Button primary basic color="blue" size="tiny" onClick={this.handleEditProject}>Edit</Button>
-            </div>
+            <Button.Group fluid>
+              <Button basic color="red" size="tiny" onClick={this.handleDeleteProject}>Delete</Button>
+              <Button basic color="green" as={Link} to={`/edit-projects/${id}/manage`}>Manage</Button>
+              <Button basic color="blue" as={Link} to={`/edit-projects/${id}/edit`}>Edit</Button>
+            </Button.Group>
           </Card.Content>
         )
+        // <Button basic color="blue" size="tiny" onClick={this.handleEditProject}>Edit</Button>
+        // <div className='ui two buttons'>
+        //   <Button negative basic color="red" size="tiny" onClick={this.handleDeleteProject}>Delete</Button>
+        //   <Button primary basic color="blue" size="tiny" onClick={this.handleEditProject}>Edit</Button>
+        // </div>
       }
       return null;
     }

@@ -12,11 +12,15 @@ const validate = (values) => {
   const errors = {};
   console.log('Validate values:', values);
 
-  if(!values.email){
-    errors.email = 'Please enter email'
-  }else if(!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)){
-    errors.email = 'Invalid email';
+  if(!values.username){
+    errors.username = 'Please enter username'
   }
+
+  // if(!values.email){
+  //   errors.email = 'Please enter email'
+  // }else if(!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)){
+  //   errors.email = 'Invalid email';
+  // }
 
   if(!values.password){
     errors.password = 'Please enter password'
@@ -83,11 +87,12 @@ class LoginModal extends React.Component {
     });
   }
 
-  handleEmailPasswordLogin = (values) => {
+  handleUsernamePasswordLogin = (values) => {
     console.log('handleEmailPasswordSubmit values:', values);
     const {dispatch, change, untouch} = this.props;
-    dispatch(actions.startEmailPasswordLogin(values.email, values.password)).then(() => {
+    dispatch(actions.startUsernamePasswordLogin(values.username, values.password)).then(() => {
       dispatch(actions.setCurrentModal(null));
+      dispatch(actions.startAddUsers());
       // dispatch(actions.setRedirectUrl('/'));
       // hashHistory.push(this.props.redirectUrl);
     }).catch(() => {
@@ -141,11 +146,11 @@ class LoginModal extends React.Component {
     // };
 
     return (
-      <Modal open size="small" onClose={this.handleCloseModal}>
+      <Modal size="tiny" open onClose={this.handleCloseModal}>
         <Modal.Content>
           {this.renderAuthError()}
-          <Form onSubmit={this.props.handleSubmit(this.handleEmailPasswordLogin)}>
-            <Field name="email" component={this.renderField} type="text" label="Email"/>
+          <Form onSubmit={this.props.handleSubmit(this.handleUsernamePasswordLogin)}>
+            <Field name="username" component={this.renderField} type="text" label="Username"/>
             <Field name="password" component={this.renderField} type="password" label="Password"/>
             <Form.Button fluid primary>Login</Form.Button>
             <Divider horizontal>OR</Divider>

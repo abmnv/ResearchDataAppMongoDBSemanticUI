@@ -12,8 +12,9 @@ export const getFileBlob = (file) => {
   });
 }
 
-export const signUp = (email, password) => {
+export const signUp = (username, email, password) => {
   return axios.post('/users', {
+    username,
     email,
     password
   }).then((res) => {
@@ -24,9 +25,9 @@ export const signUp = (email, password) => {
   });
 }
 
-export const login = (email, password) => {
+export const login = (username, password) => {
   return axios.post('/users/login', {
-    email,
+    username,
     password
   }).then((res) => {
     //console.log('dbAPI res:', res);
@@ -55,7 +56,20 @@ export const getProjects = () => {
   return axios.get('/projects').then((res) => {
     return res.data;
   }).catch((err) => {
-    throw new Error(err);
+    return Promise.reject(err);
+  });
+}
+
+export const getUsers = (token) => {
+  const config = {
+    headers: {
+      'x-auth': token
+    },
+  }
+  return axios.get('/users', config).then((res) => {
+    return res.data;
+  }).catch((err) => {
+    return promise.reject(err);
   });
 }
 
@@ -91,6 +105,22 @@ export const updateProject = (projectId, formData, uploadProgress, token) => {
     return res.data;
   }).catch((err) => {
     throw new Error(err);
+  });
+}
+
+export const updateProjectManagers = (projectId, managers, token) => {
+  const config = {
+    headers: {
+      'x-auth': token
+    },
+    data: {
+      managers
+    }
+  }
+  return axios.patch(`/projects/${projectId}/managers`, config).then((res) => {
+    return res.data;
+  }).catch((err) => {
+    throw err;
   });
 }
 
