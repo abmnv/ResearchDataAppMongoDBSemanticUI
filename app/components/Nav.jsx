@@ -1,7 +1,7 @@
 import React from 'react';
 import {Link, IndexLink, hashHistory} from 'react-router';
 import {connect} from 'react-redux';
-import {Menu, Input} from 'semantic-ui-react';
+import {Menu, Input, Dropdown} from 'semantic-ui-react';
 
 import * as actions from 'actions';
 import LoginModal from 'LoginModal';
@@ -49,9 +49,31 @@ class Nav extends React.Component {
   handleMenuItemClick = (e, {name}) => {this.setState({activeItem: name})}
 
   render () {
-    const {isAuth, role} = this.props;
-    console.log('role:', role);
-    const auth = isAuth ? (<Menu.Item onClick={this.handleLogout}>Logout</Menu.Item>) : (<Menu.Item onClick={this.handleOpenLoginModal}>Login</Menu.Item>);
+    const {isAuth, role, username} = this.props;
+    console.log('username:', username);
+
+    const auth = () => {
+      if(isAuth){
+        return (
+          <Dropdown text={username} simple item labeled >
+            <Dropdown.Menu>
+              <Dropdown.Item text="Logout" onClick={this.handleLogout}/>
+            </Dropdown.Menu>
+          </Dropdown>
+        )
+        // <Menu.Item>
+        //   <b>{username}</b>
+      // </Menu.Item>
+
+        // text={username}
+      }else{
+        return (
+          <Menu.Item onClick={this.handleOpenLoginModal}>Login</Menu.Item>
+        )
+      }
+    }
+
+    // isAuth ? (<Menu.Item onClick={this.handleLogout}>Logout</Menu.Item>) : (<Menu.Item onClick={this.handleOpenLoginModal}>Login</Menu.Item>);
     //const auth = isAuth ? (<Link activeClassName="active-link" onClick={this.handleLogout}>Logout</Link>) : (<Link activeClassName="active-link" to="/login">Login</Link>);
     //const auth = isAuth ? (<Link activeClassName="active-link" onClick={this.handleLogout}>Logout</Link>) : (<button className='login-button' onClick={this.handleOpenLoginModal}>Login</button>);
     const menu = () => {
@@ -104,13 +126,13 @@ class Nav extends React.Component {
         <Menu.Menu position="right">
           <Input icon='search' placeholder='Search projects...' />
         </Menu.Menu>
-        {auth}
+        {auth()}
       </Menu>
     );
   }
 }
 
-export default connect(({auth: {isAuth, role}}) => ({isAuth, role}), null, null, {pure:false})(Nav);
+export default connect(({auth: {isAuth, role, username}}) => ({isAuth, role, username}), null, null, {pure:false})(Nav);
 //export default Nav;
 // <div onClick={this.handleLogout}>
 //   Logout

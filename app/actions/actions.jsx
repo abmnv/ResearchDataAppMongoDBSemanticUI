@@ -45,11 +45,13 @@ export const authError = (error) => {
   }
 }
 
-export const authUser = (token, role) => {
+export const authUser = (token, role, username, email) => {
   return {
     type: 'AUTH_USER',
     token,
-    role
+    role,
+    username,
+    email
   }
 }
 
@@ -60,17 +62,36 @@ export const setCurrentModal = (currentModal) => {
   }
 }
 
+export const addDUARequest = (values, id) => {
+  return {
+    type: 'ADD_DUA_REQUEST',
+    values,
+    id
+  }
+}
+
+export const startAddDUARequest = (values, id) => {
+  return (dispatch, getState) => {
+    const {auth: {token, email, username}} = getState();
+    return dbAPI.addDUARequest({...values, email, username}, id, token).then((project) => {
+      dispatch(addDUARequest({...values, email, username}, id));
+    }).catch((err) => {
+      return Promise.reject(err);
+    })
+  }
+}
+
 export const startSignUpUser = (username, email, password) => {
   return (dispatch, getState) => {
     return dbAPI.signUp(username, email, password).then((user) => {
       console.log('startSignUpUser user:', user);
       const decoded = jwtDecode(user.token);
-      dispatch(authUser(user.token, decoded.role));
+      dispatch(authUser(user.token, decoded.role, decoded.username, decoded.email));
       localStorage.setItem('researchDataAppToken', user.token);
     }).catch((err) => {
       console.log('startSignUpUser error:', err);
       dispatch(authError(err));
-      return Promise.reject();
+      return Promise.reject(err);
     });
   }
   // return (dispatch, getState) => {
@@ -91,7 +112,7 @@ export const verifyAuth = () => {
     console.log('verifyAuth token:', token);
     if(token){
       const decoded = jwtDecode(token);
-      dispatch(authUser(token, decoded.role));
+      dispatch(authUser(token, decoded.role, decoded.username, decoded.email));
     }
   }
 }
@@ -103,7 +124,7 @@ export const startUsernamePasswordLogin = (username, password) => {
     return dbAPI.login(username, password).then((user) => {
       console.log('startEmailPasswordLogin user:', user);
       const decoded = jwtDecode(user.token);
-      dispatch(authUser(user.token, decoded.role));
+      dispatch(authUser(user.token, decoded.role, decoded.username, decoded.email));
       localStorage.setItem('researchDataAppToken', user.token);
       return Promise.resolve();
     }).catch((err) => {
@@ -224,11 +245,11 @@ export const startAddState = () => {
   return (dispatch, getState) => {
     dispatch(setLoadingStatus(true));
     dispatch(startAddProjects()).then(() => {
-      dispatch(startAddUsers());
+      return dispatch(startAddUsers());
     }).then(() => {
       dispatch(setLoadingStatus(false));
     }).catch((err) => {
-      console.log(err);
+      throw err;
     });
   }
 }
@@ -251,8 +272,23 @@ export const startAddUsers = () => {
 
     if(isAuth && (role === 'manager' || role === 'admin')){
       return dbAPI.getUsers(token).then((users) => {
-        console.log('users:', users);
+        console.log('startAddUsers users:', users);
         dispatch(addUsers(users));
+      }).catch((err) => {
+        return Promise.reject();
+      });
+    }
+  }
+}
+
+export const startUpdateUsers = () => {
+  return (dispatch, getState) => {
+    const {auth: {isAuth, role, token}} = getState();
+
+    if(isAuth && (role === 'manager' || role === 'admin')){
+      return dbAPI.getUsers(token).then((users) => {
+        console.log('startUpdateUses users:', users);
+        dispatch(updateUsers(users));
       }).catch((err) => {
         return Promise.reject();
       });
@@ -267,11 +303,18 @@ export const addUsers = (users) => {
   }
 }
 
-export const startUpdateProjectManagers = (id, managers) => {
+export const updateUsers = (users) => {
+  return {
+    type: 'UPDATE_USERS',
+    users
+  }
+}
+
+export const startUpdateProjectManagers = (projectId, managers) => {
   return (dispatch, getState) => {
     const {auth: {token}} = getState();
-    return dbAPI.updateProjectManagers(id, managers, token).then(() => {
-      dispatch(updateProjectManagers(id, managers));
+    return dbAPI.updateProjectManagers(projectId, managers, token).then(() => {
+      dispatch(updateProjectManagers(projectId, managers));
     });
   }
 }
@@ -284,6 +327,67 @@ export const updateProjectManagers = (id, managers) => {
   }
 }
 
+export const startUpdateAllowedUsers = (projectId, allowedUsers) => {
+  return (dispatch, getState) => {
+    const {auth: {token}} = getState();
+    return dbAPI.updateAllowedUsers(projectId, allowedUsers, token).then(() => {
+      dispatch(updateAllowedUsers(projectId, allowedUsers));
+    });
+  }
+}
+
+export const updateAllowedUsers = (id, allowedUsers) => {
+  return {
+    type: 'UPDATE_ALLOWED_USERS',
+    id,
+    allowedUsers
+  }
+}
+
+export const startApproveDUARequest = (projectId, DUARequestId) => {
+  return (dispatch, getState) => {
+    const {auth: {token}, projects} = getState();
+    let project;
+    projects.forEach((p) => {
+      if(p.id === projectId){
+        project = p;
+      }
+    });
+
+    let username;
+    project.DUARequests.forEach((req) => {
+      if(req.id === DUARequestId){
+        ({username} = req);
+      }
+    });
+
+    return dbAPI.addUserToAllowedUsers(projectId, username, token).then(() => {
+      dispatch(addUserToAllowedUsers(projectId, username));
+    }).then(() => {
+      return dbAPI.deleteDUARequest(projectId, DUARequestId, token);
+    }).then(() => {
+      dispatch(deleteDUARequest(projectId, DUARequestId));
+    }).catch((err) => {
+      return Promise.reject(err);
+    });
+  }
+}
+
+export const addUserToAllowedUsers = (projectId, username) => {
+  return {
+    type: 'ADD_USER_TO_ALLOWED_USERS',
+    id: projectId,
+    username
+  }
+}
+
+export const deleteDUARequest = (projectId, DUARequestId) => {
+  return {
+    type: 'DELETE_DUA_REQUEST',
+    id: projectId,
+    DUARequestId
+  }
+}
 // export var startAddProjects = () => {
 //
 //   return (dispatch, getState) => {
@@ -578,7 +682,8 @@ export var deleteLogoImageFromCreateProjectForm = () => {
 }
 
 //Note that fileList elements contain DOM file object and progress property
-export var startCreateProject = ({title, description, logoImage=null, fileList=null, change}) => {
+export var startCreateProject = ({title, description, logoImage=null, fileList=null, requiresPermission=false, dua=null, managers, allowedUsers=null, change}) => {
+  console.log('startCreateProject manager:', managers);
 
   return (dispatch, getState) => {
     const {auth: {token}} = getState();
@@ -588,6 +693,23 @@ export var startCreateProject = ({title, description, logoImage=null, fileList=n
 
     formData.append('title', title);
     formData.append('description', description);
+    formData.append('requiresPermission', requiresPermission);
+
+    if(requiresPermission){
+      formData.append('dua', dua);
+    }
+
+    if(managers){
+      managers.forEach((m) => {
+        formData.append('managers[]', m);
+      });
+    }
+
+    if(allowedUsers){
+      allowedUsers.forEach((u) => {
+        formData.append('allowedUsers[]', u);
+      });
+    }
 
     if(logoImage){
       formData.append('logoImage', logoImage.file);

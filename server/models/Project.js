@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const fsp = require('fs-promise');
+const validator = require('validator');
 
 const Schema = mongoose.Schema;
 
@@ -85,6 +86,41 @@ FileSchema.post('remove', function(doc) {
 //   // });
 // })
 
+const DUARequestSchema = new Schema({
+  firstName: {
+    type: String,
+    required: true
+  },
+  lastName: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    required: true,
+    trim: true,
+    minlength: 1,
+    validate: {
+      validator: validator.isEmail,
+      message: '{VALUE} is not a valid email'
+    }
+  },
+  username: {
+    type: String,
+    required: true,
+    trim: true,
+    minlength: 1
+  },
+  institution: {
+    type: String,
+    required: true
+  },
+  status: {
+    type: String,
+    required: true,
+    default: 'pending'
+  }
+});
 
 const ProjectSchema = new Schema({
   title: {
@@ -115,7 +151,19 @@ const ProjectSchema = new Schema({
       // minlength: 0
     }
   },
+  requiresPermission: {
+    type: Boolean,
+    required: true
+  },
+  dua: {
+    type: String,
+    required: false,
+    minlength: 1,
+    trim: true
+  },
   managers: [String],
+  allowedUsers: [String],
+  DUARequests: [DUARequestSchema],
   files: [FileSchema]
 });
 
@@ -135,34 +183,41 @@ ProjectSchema.methods.toJSON = function() {
     return file;
   });
 
+  const DUARequests = projectObj.DUARequests.map((doc) => {
+    doc.id = doc._id;
+    delete doc._id;
+    
+    return doc;
+  });
+
+  projectObj.DUARequests = DUARequests;
   projectObj.files = files;
 
   return projectObj;
 }
 
-ProjectSchema.method('toClient', function() {
-  //console.log('ProjectSchema.method this:', this);
-  const obj = this.toObject();
-
-  obj.id = obj._id;
-  delete obj._id;
-
-  delete obj.__v;
-
-  const newFiles = obj.files.map((file) => {
-    file.id = file._id;
-    delete file._id;
-
-    delete file.projectId;
-
-    return file;
-  });
-
-  obj.files = newFiles;
-
-  //console.log('ProjectSchema.method obj:', obj);
-  return obj;
-});
+// ProjectSchema.method('toClient', function() {
+//   //console.log('ProjectSchema.method this:', this);
+//   const obj = this.toObject();
+//
+//   obj.id = obj._id;
+//   delete obj._id;
+//   delete obj.__v;
+//
+//   const newFiles = obj.files.map((file) => {
+//     file.id = file._id;
+//     delete file._id;
+//
+//     delete file.projectId;
+//
+//     return file;
+//   });
+//
+//   obj.files = newFiles;
+//
+//   //console.log('ProjectSchema.method obj:', obj);
+//   return obj;
+// });
 
 ProjectSchema.methods.updateLogoImage = function(logoImage) {
   const project = this;
@@ -192,7 +247,16 @@ ProjectSchema.pre('save', function(next) {
     //const newPath = `./public/data/${this._id}/${this.logo.name}`;
     fsp.mkdirp(`./public/data/${this._id}`).then(() => {
       //   console.log('created dir:', `./public/${projectId}`);
-      return fsp.rename(this.logoImage.url, `./public/data/${this._id}/${this.logoImage.name}`);
+      if(this.logoImage.name){
+        return fsp.rename(this.logoImage.url, `./public/data/${this._id}/${this.logoImage.name}`);
+      }else{
+        this.logoImage = {
+          name: 'default-project.png',
+          url: 'public/images/default-project.png'
+        }
+        //console.log('ProjectSchema.pre', this.logoImage);
+        return fsp.createReadStream(this.logoImage.url).pipe(fsp.createWriteStream(`./public/data/${this._id}/${this.logoImage.name}`));
+      }
     }).then(() => {
       this.logoImage.url = `/data/${this._id}/${this.logoImage.name}`;
       next();

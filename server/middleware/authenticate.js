@@ -3,6 +3,7 @@ const {Project} = require('../models/Project');
 
 const authenticate = (req, res, next) => {
   const token = req.header('x-auth');
+  //console.log('authenticate token:', token);
 
   User.findByToken(token).then((user) => {
     if(!user){
@@ -36,6 +37,7 @@ const authManagerOrAdmin = (req, res, next) => {
 const authAllowedManagerOrAdmin = (req, res, next) => {
   const user = req.user;
   const projectId = req.params.projectId;
+  //console.log('authAllowedManagerOrAdmin projectId:', projectId);
 
   if(user.role === 'user'){
     res.status(401).send('You don\'t have admin privilege');
@@ -46,8 +48,8 @@ const authAllowedManagerOrAdmin = (req, res, next) => {
       }
 
       let allowed = false;
-      project.managers.forEach((userId) => {
-        if(user._id.toHexString() === userId){
+      project.managers.forEach((username) => {
+        if(user.username === username){
           allowed = true;
         }
       });

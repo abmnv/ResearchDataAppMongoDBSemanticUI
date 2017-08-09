@@ -189,8 +189,7 @@ app.patch('/projects/:projectId', authenticate, authAllowedManagerOrAdmin, uploa
     };
   }
 
-  console.log('logoImage:', logoImage);
-
+  //console.log('logoImage:', logoImage);
   Project.findById(projectId).then((project) => {
     if(!project){
       return Promise.reject('NotFound');
@@ -210,7 +209,7 @@ app.patch('/projects/:projectId', authenticate, authAllowedManagerOrAdmin, uploa
     if(!doc){
       return Promise.reject('NotFound');
     }
-    res.send(doc.toClient());
+    res.send(doc);
   }).catch((err) => {
     // console.log('error:', err);
     if(err === 'NotFound'){
@@ -254,22 +253,89 @@ app.patch('/projects/:projectId', authenticate, authAllowedManagerOrAdmin, uploa
   // });
 });
 
-app.patch('/project/:projectId/managers', authenticate, authAllowedManagerOrAdmin, (res, req) => {
+app.post('/projects/:projectId/duaRequests', authenticate, (req, res) => {
   const projectId = req.params.projectId;
-  const body = _.pick(req.body, 'managers');
+  const values = _.pick(req.body, ['firstName', 'lastName', 'email', 'institution', 'username']);
 
   Project.findById(projectId).then((project) => {
     if(!project){
       return Promise.reject('NotFound');
     }
 
-    project.managers = body.managers;
+    project.DUARequests.push(values);
     return project.save();
   }).then((doc) => {
     if(!doc){
       return Promise.reject('NotFound');
     }
-    res.send(doc.toClient());
+    res.send(doc);
+  }).catch((err) => {
+    // console.log('error:', err);
+    if(err === 'NotFound'){
+      res.status(404).send();
+    }else{
+      console.log('Error:', err);
+      res.status(400).send(err);
+    }
+  });
+});
+
+app.delete('/projects/:projectId/duaRequests/:DUARequestId', authenticate, authAllowedManagerOrAdmin, (req, res) => {
+  const {projectId, DUARequestId} = req.params;
+  // const values = _.pick(req.body, ['firstName', 'lastName', 'email', 'institution', 'username']);
+  const {username} = req.body;
+
+  Project.findById(projectId).then((project) => {
+    if(!project){
+      return Promise.reject('NotFound');
+    }
+
+    project.DUARequests.pull({_id: DUARequestId});
+
+    return project.save();
+  }).then((doc) => {
+    if(!doc){
+      return Promise.reject('NotFound');
+    }
+    res.send(doc);
+  }).catch((err) => {
+    console.log('error:', err);
+
+    if(err === 'NotFound'){
+      res.status(404).send();
+    }else{
+      console.log('Error:', err);
+      res.status(400).send(err);
+    }
+  });
+});
+
+app.patch('/projects/:projectId/managers', authenticate, authAllowedManagerOrAdmin, (req, res) => {
+  const projectId = req.params.projectId;
+  //const body = _.pick(req.body, 'managers');
+  const {managers} = req.body;
+
+  //console.log('managers:', managers);
+  if(!managers){
+    return res.status(400).send();
+  }
+
+  User.updateUserRoles(managers, 'manager').then(() => {
+    return Project.findById(projectId);
+  }).then((project) => {
+    if(!project){
+      return Promise.reject('NotFound');
+    }
+
+    console.log('project.managers:', project.managers);
+    project.managers = managers;
+
+    return project.save();
+  }).then((doc) => {
+    if(!doc){
+      return Promise.reject('NotFound');
+    }
+    res.send(doc);
   }).catch((err) => {
     // console.log('error:', err);
     if(err === 'NotFound'){
@@ -280,6 +346,83 @@ app.patch('/project/:projectId/managers', authenticate, authAllowedManagerOrAdmi
   });
 });
 
+app.patch('/projects/:projectId/allowedUsers', authenticate, authAllowedManagerOrAdmin, (req, res) => {
+  const projectId = req.params.projectId;
+  //const body = _.pick(req.body, 'managers');
+  const {allowedUsers} = req.body;
+
+  //console.log('managers:', managers);
+  if(!allowedUsers){
+    return res.status(400).send();
+  }
+
+  Project.findById(projectId).then((project) => {
+    if(!project){
+      return Promise.reject('NotFound');
+    }
+
+    // console.log('project.managers:', project.managers);
+    project.allowedUsers = allowedUsers;
+
+    return project.save();
+  }).then((doc) => {
+    if(!doc){
+      return Promise.reject('NotFound');
+    }
+    res.send(doc);
+  }).catch((err) => {
+    // console.log('error:', err);
+    if(err === 'NotFound'){
+      res.status(404).send();
+    }else{
+      res.status(400).send(err);
+    }
+  });
+});
+
+app.post('/projects/:projectId/allowedUsers', authenticate, authAllowedManagerOrAdmin, (req, res) => {
+  const projectId = req.params.projectId;
+  //const body = _.pick(req.body, 'managers');
+  const {username} = req.body;
+
+  //console.log('managers:', managers);
+  if(!username){
+    return res.status(400).send();
+  }
+
+  Project.findById(projectId).then((project) => {
+    if(!project){
+      return Promise.reject('NotFound');
+    }
+
+    // console.log('project.managers:', project.managers);
+    //Add a new username is it doesn't exist
+    let exist = false;
+    project.allowedUsers.forEach((u) => {
+      if(u === username){
+        exist = true;
+      }
+    });
+
+    if(!exist){
+      project.allowedUsers.push(username);
+    }
+
+    return project.save();
+  }).then((doc) => {
+    if(!doc){
+      return Promise.reject('NotFound');
+    }
+    res.send(doc);
+  }).catch((err) => {
+    console.log('error:', err);
+    if(err === 'NotFound'){
+      res.status(404).send();
+    }else{
+      res.status(400).send(err);
+    }
+  });
+});
 
 app.delete('/projects/:projectId', authenticate, authAllowedManagerOrAdmin, (req, res) => {
   //console.log('projectId:', req.params.projectId);
@@ -297,7 +440,6 @@ app.delete('/projects/:projectId', authenticate, authAllowedManagerOrAdmin, (req
   });
 });
 
-
 app.post('/projects', authenticate, authManagerOrAdmin, upload.fields([{
   name: 'dataFiles',
   maxCount: 50
@@ -309,10 +451,26 @@ app.post('/projects', authenticate, authManagerOrAdmin, upload.fields([{
   //console.log(req.files.logo);
   const user = req.user;
 
-  const body = _.pick(req.body, ['title', 'description']);
+  const body = _.pick(req.body, ['title', 'description', 'requiresPermission']);
+  //console.log('app.post(/projects)', body);
+
   const project = new Project(body);
   project.createdAt = Math.floor((new Date().getTime())/1000);
-  project.managers.push(user.username);
+
+  if(body.requiresPermission){
+    project.dua = req.body.dua;
+  }
+
+  if(req.body.managers){
+    const managers = req.body.managers;
+    console.log('managers:', managers);
+    project.managers.push(...managers);
+  }
+
+  if(req.body.allowedUsers){
+    const allowedUsers = req.body.allowedUsers;
+    project.allowedUsers.push(...allowedUsers);
+  }
   //console.log('project:', project);s
 
   const projectId = project._id;
@@ -328,16 +486,18 @@ app.post('/projects', authenticate, authManagerOrAdmin, upload.fields([{
       name: req.files.logoImage[0].originalname,
       url: req.files.logoImage[0].path
     };
-  }else{
-    project.logoImage = {
-      name: 'default-project.png',
-      url: 'public/images/default-project.png'
-    }
   }
+  // else{
+  //   project.logoImage = {
+  //     name: 'default-project.png',
+  //     url: 'public/images/default-project.png'
+  //   }
+  // }
 
   project.save().then((doc) => {
-    res.send(doc.toClient());
+    res.send(doc);
   }).catch((err) => {
+    console.log('err:', err);
     res.status(400).send(err);
   });
 });

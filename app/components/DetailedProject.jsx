@@ -3,36 +3,62 @@ import {connect} from 'react-redux';
 import moment from 'moment';
 import axios from 'axios';
 import DownloadButton from 'ZipDownloadButton';
-//var DownloadButton = require('downloadbutton/es5');
 import JSZip from 'jszip';
-import {Card, Header, Grid, Image, Checkbox, List, Button, Icon} from 'semantic-ui-react';
+import {Card, Header, Grid, Image, Checkbox, List, Button, Icon, Label, Segment} from 'semantic-ui-react';
+import SpinningWheel from 'SpinningWheel';
 
 import FileList from 'FileList';
 import {getFileBlob} from 'ResearchDataAPI';
-//import * as actions from 'actions';
+import * as actions from 'actions';
+import DUAModal from 'DUAModal';
 
 class DetailedProject extends React.Component {
 
-//var DetailedProject = React.createClass({
   constructor (props) {
     super(props);
 
-    const {files} = this.props;
+    //destructering with default
+    const {files=[]} = props;
 
     const fileSelection = {};
 
     files.forEach((file) => {
       fileSelection[file.id] = false;
     });
-    // console.log('filesSelection:', filesSelection);
 
     this.state = {
       fileSelection,
-      areAllFilesSelected: false
+      areAllFilesSelected: false,
+      DUAModalOpen: false
     }
 
     this.handleToggleFileSelection = this.handleToggleFileSelection.bind(this);
     this.handleDownloadSelectedFiles = this.handleDownloadSelectedFiles.bind(this);
+    this.handleCloseDUAModal = this.handleCloseDUAModal.bind(this);
+    this.handleDUASubmit = this.handleDUASubmit.bind(this);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if(this.props.isLoading && !nextProps.isLoading){
+      const {files} = nextProps;
+
+      const fileSelection = {};
+
+      files.forEach((file) => {
+        fileSelection[file.id] = false;
+      });
+
+      this.setState({
+        fileSelection,
+        areAllFilesSelected: false
+      })
+    }
+  }
+
+  handleOpenLoginModal = () => {
+    const {dispatch} = this.props;
+
+    dispatch(actions.setCurrentModal('Login'));
   }
 
   handleToggleFileSelection (fileId) {
@@ -121,87 +147,198 @@ class DetailedProject extends React.Component {
     console.log("download files");
   }
 
+  handleOpenDUAModal = () => {
+    const {dispatch} = this.props;
+
+    //dispatch(actions.setCurrentModal('DUA'));
+    this.setState({
+      DUAModalOpen: true
+    });
+  }
+
+  handleCloseDUAModal() {
+    this.setState({
+      DUAModalOpen: false
+    });
+  }
+
+  handleDUASubmit(values) {
+    console.log('handleDUASubmit values:', values);
+    const {dispatch, id} = this.props;
+    dispatch(actions.startAddDUARequest(values, id)).then(() => {
+      this.setState({
+        DUAModalOpen: false
+      });
+    });
+    //   dispatch(actions.setCurrentModal(null));
+    //   dispatch(actions.startUpdateUsers());
+    //   // dispatch(actions.setRedirectUrl('/'));
+    //   // hashHistory.push(this.props.redirectUrl);
+    // }).catch(() => {
+    //   dispatch(change('password', null));
+    //   dispatch(untouch('password'));
+    // });
+  }
+
   render () {
-    const {fileSelection, areAllFilesSelected} = this.state;
-    const {id, title, createdAt, description, files, logoImage} = this.props;
+    const {id, title, createdAt, description, files, logoImage, requiresPermission, dua, managers, allowedUsers, isLoading, username, DUARequests} = this.props;
+    const {fileSelection, areAllFilesSelected, DUAModalOpen} = this.state;
+    // console.log('dua:', dua)
     //console.log('areAllFilesSelected:', areAllFilesSelected);
     //console.log('fileSelection:', fileSelection);
 
-    let selectedFilesUrl = `/projects/${id}/files?`;
-    let firstInstance = true;
-    Object.keys(fileSelection).forEach((key) => {
-      if(fileSelection[key]){
-        if(!firstInstance){
-          selectedFilesUrl += `&`;
-        }
-        selectedFilesUrl += `id=${key}`;
-        firstInstance = false;
+    const getStatus = () => {
+      let status;
+
+      if(!username){
+        return 'requiresLoginOrSignup';
       }
-    });
-    console.log('url:', selectedFilesUrl);
 
-    const fileList = () => {
-      return (
-        <List>
-          <List.Item>
-            <List.Content floated="right">
-              <Checkbox onChange={this.handleToggleAllFileSelection} checked={areAllFilesSelected}/>
-            </List.Content>
-          </List.Item>
-          {files.map((file) => {
-            const url = `/projects/${id}/files/${file.id}`;
-            return(
-              <List.Item key={file.id}>
-                <List.Content floated="right">
-                  <Checkbox  checked={fileSelection[file.id]} onChange={() => {this.handleToggleFileSelection(file.id)}}/>
-                </List.Content>
-                <List.Content floated="right">
-                  <a href={url}>
-                    <Icon name="download"/>
-                  </a>
-                </List.Content>
-                <List.Content>
-                  {file.name}
-                </List.Content>
-              </List.Item>
-            )
-          })}
-          <List.Item>
-            <List.Content floated="right">
-              <a href={selectedFilesUrl}>
-                <Icon name="download" fitted/>
-              </a>
-            </List.Content>
-          </List.Item>
-        </List>
-      )
-      // <Icon name="download" fitted className="show-cursor" onClick={this.handleDownloadSelectedFiles}/>
+      managers.forEach((m) => {
+        if(m === username){
+          status = 'allowed';
+        }
+      });
 
-      // <Button compact icon className="no-margins button-padding" >
-      //   <Icon name="download" fitted/>
-      // </Button>
-      // onClick={this.downloadFiles}
+      if(!status){
+        allowedUsers.forEach((u) => {
+          if(u === username){
+            status = 'allowed';
+          }
+        });
+      }
+
+      if(!status){
+        DUARequests.forEach((req) => {
+          if(req.username === username){
+            status = 'pending';
+          }
+        });
+      }
+
+      if(!status){
+        status = 'denied';
+      }
+
+      return status;
     }
 
-    return (
-      <Card fluid color="red" >
-        <Card.Content>
-          <Image floated="left" size="tiny" src={logoImage.url}/>
-          <Card.Header>
-            {title}
-          </Card.Header>
-          <Card.Meta>
-            Created on {moment.unix(createdAt).format('MMM Do, YYYY')}
-          </Card.Meta>
-          <Card.Description>
-            {description}
-          </Card.Description>
-        </Card.Content>
-        <Card.Content extra>
-          {fileList()}
-        </Card.Content>
-      </Card>
-    );
+    const fileList = () => {
+
+      const status = getStatus();
+      console.log('status:', status);
+
+      switch(status){
+        case 'allowed':
+          let selectedFilesUrl = `/projects/${id}/files?`;
+          let firstInstance = true;
+
+          Object.keys(fileSelection).forEach((key) => {
+            if(fileSelection[key]){
+              if(!firstInstance){
+                selectedFilesUrl += `&`;
+              }
+              selectedFilesUrl += `id=${key}`;
+              firstInstance = false;
+            }
+          });
+
+          return (
+            <List>
+              <List.Item>
+                <List.Content floated="right">
+                  <Checkbox onChange={this.handleToggleAllFileSelection} checked={areAllFilesSelected}/>
+                </List.Content>
+              </List.Item>
+              {files.map((file) => {
+                const url = `/projects/${id}/files/${file.id}`;
+                return(
+                  <List.Item key={file.id}>
+                    <List.Content floated="right">
+                      <Checkbox  checked={fileSelection[file.id]} onChange={() => {this.handleToggleFileSelection(file.id)}}/>
+                    </List.Content>
+                    <List.Content floated="right">
+                      <a href={url}>
+                        <Icon name="download"/>
+                      </a>
+                    </List.Content>
+                    <List.Content>
+                      {file.name}
+                    </List.Content>
+                  </List.Item>
+                )
+              })}
+              <List.Item>
+                <List.Content floated="right">
+                  <a href={selectedFilesUrl}>
+                    <Icon name="download" fitted/>
+                  </a>
+                </List.Content>
+              </List.Item>
+            </List>
+          );
+
+        case 'pending':
+          return (
+            <p style={{color:"#db2828"}}>
+              Your Data User Agreement request is pending approval
+            </p>
+          );
+
+        case 'denied':
+          return (
+            <div className="center-text-align">
+              <p>Accessing data requires Data User Agreement</p>
+              <Button negative basic fluid onClick={this.handleOpenDUAModal}>Request Permission</Button>
+            </div>
+          );
+
+        case 'requiresLoginOrSignup':
+          return (
+            <div className="center-text-align">
+              <Button negative basic fluid onClick={this.handleOpenLoginModal}>Accessing data requires Login</Button>
+            </div>
+          );
+
+        default:
+          return (
+            <div className="center-text-align">
+              <Button negative basic fluid onClick={this.handleOpenDUAModal}>Request Permission</Button>
+            </div>
+          );
+      }
+    }
+
+    if(isLoading){
+      return (
+        <SpinningWheel/>
+      )
+    }else{
+
+      return (
+        <div>
+          <Card fluid color="red" >
+            <Card.Content>
+              <Image floated="left" size="tiny" src={logoImage.url}/>
+              <Card.Header>
+                {title}
+              </Card.Header>
+              <Card.Meta>
+                Created on {moment.unix(createdAt).format('MMM Do, YYYY')}
+              </Card.Meta>
+              <Card.Description>
+                {description}
+              </Card.Description>
+            </Card.Content>
+            <Card.Content extra>
+              {fileList()}
+            </Card.Content>
+          </Card>
+          <DUAModal open={DUAModalOpen} onClose={this.handleCloseDUAModal} dua={dua} onDUASubmit={this.handleDUASubmit}/>
+        </div>
+      );
+    }
+
     // <Checkbox/>
     // <FileList files={files} filesSelection={filesSelection} onToggleFileSelection={this.handleToggleFileSelection} projectId={id} editModeStatus={false}/>
     // <div className="project">
@@ -229,7 +366,7 @@ class DetailedProject extends React.Component {
 
 export default connect((state, ownProps) => {
   const {params: {projectId}} = ownProps;
-  const {projects} = state;
+  const {projects, isLoading, auth: {username}} = state;
   //console.log('projectId:', projectId);
 
   let currentProject;
@@ -240,7 +377,7 @@ export default connect((state, ownProps) => {
     }
   });
 
-  return {...currentProject};
+  return {...currentProject, isLoading, username};
 })(DetailedProject);
 // <button className="button small success" onClick={this.handleDownloadSelectedFiles}>Download Selected</button>
 //<button className="button small success" onClick={this.handleDownloadAllFiles}>Download All</button>

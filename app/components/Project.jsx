@@ -3,7 +3,7 @@ import {connect} from 'react-redux';
 import {firebaseRef, firebaseStorageRef} from 'app/firebase';
 import {Link, hashHistory} from 'react-router';
 import moment from 'moment';
-import {Card, Image, Grid, Button, Header} from 'semantic-ui-react';
+import {Card, Image, Grid, Button, Header, Label} from 'semantic-ui-react';
 
 import * as actions from 'actions';
 import ProjectControlBar from 'ProjectControlBar';
@@ -33,7 +33,7 @@ class Project extends React.Component {
   }
 
   render () {
-    var {title, createdAt, id, description, logoImage, editModeStatus} = this.props;
+    var {title, createdAt, id, description, logoImage, requiresPermission=null, editModeStatus} = this.props;
     var briefDescription = description.length < 120 ? description : description.slice(0, 120) + '...';
 
     const projectControlBar = () => {
@@ -56,23 +56,42 @@ class Project extends React.Component {
       return null;
     }
 
+    const dua = () => {
+      if(requiresPermission){
+        return (
+          <Label color="red" attached="top right">DUA</Label>
+        )
+      }else{
+        return null;
+      }
+    }
+
     return (
       <Card fluid>
+
         <Card.Content as={Link} to={'/projects/'+id}>
+
           <Image floated="left" size="tiny" src={logoImage.url}/>
+          {dua()}
           <Card.Header>
             {title}
           </Card.Header>
+
           <Card.Meta>
             Created on {moment.unix(createdAt).format('MMM Do, YYYY @ h:mm a')}
           </Card.Meta>
+
           <Card.Description>
             {briefDescription}
           </Card.Description>
         </Card.Content>
+
         {projectControlBar()}
       </Card>
     );
+    // <Label color="red" attached="top">DUA</Label>
+
+    // floated="left"
     // <Card as={Link} to={'/projects/'+id}>
     //   <Card.Content>
     //     <Grid columns={2}>

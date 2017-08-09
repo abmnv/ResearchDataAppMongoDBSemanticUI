@@ -74,11 +74,13 @@ export const projectReducer = (state = [], action) => {
         ...state,
         action.project
       ]
+
     case 'ADD_PROJECTS':
       return [
         ...state,
         ...action.projects
       ]
+
     case 'UPDATE_PROJECT':
       return state.map((project) => {
         if(project.id === action.project.id){
@@ -92,10 +94,12 @@ export const projectReducer = (state = [], action) => {
           return project
         }
       });
+
     case 'DELETE_PROJECT':
       return state.filter((project) => {
         return  project.id !== action.id; //project.id === action.id ? false : true;
       });
+
     case 'DELETE_FILE':
       return state.map((project) => {
         if(project.id === action.projectId){
@@ -110,6 +114,7 @@ export const projectReducer = (state = [], action) => {
           return project;
         }
       });
+
     case 'UPDATE_PROJECT_MANAGERS':
       return state.map((project) => {
         if(project.id === action.id){
@@ -118,6 +123,48 @@ export const projectReducer = (state = [], action) => {
           return project
         }
       });
+
+    case 'UPDATE_ALLOWED_USERS':
+      return state.map((project) => {
+        if(project.id === action.id){
+          return {...project, allowedUsers: action.allowedUsers}
+        }else{
+          return project
+        }
+      });
+
+    case 'ADD_USER_TO_ALLOWED_USERS':
+      return state.map((project) => {
+        if(project.id === action.id){
+          return {...project, allowedUsers: [...project.allowedUsers, action.username]}
+        }else{
+          return project
+        }
+      });
+
+    case 'ADD_DUA_REQUEST':
+      return state.map((project) => {
+        if(project.id === action.id){
+          return {...project, DUARequests: [...project.DUARequests, action.values]}
+        }else{
+          return project;
+        }
+      });
+
+    case 'DELETE_DUA_REQUEST':
+      return state.map((project) => {
+        if(project.id === action.id){
+          const newDUARequests = project.DUARequests.filter((req) => {
+            return req.id !== action.DUARequestId;
+          });
+          console.log('newDUARequests', newDUARequests);
+
+          return {...project, DUARequests: newDUARequests}
+        }else{
+          return project;
+        }
+      });
+
     default:
       return state;
   }
@@ -130,12 +177,16 @@ export const userReducer = (state = [], action) => {
         ...state,
         ...action.users
       ];
+    case 'UPDATE_USERS':
+      return [
+        ...action.users
+      ];
     default:
       return state;
   }
 }
 
-export const authReducer = (state = {isAuth: false, error: null, role: null, token: null}, action) => {
+export const authReducer = (state = {isAuth: false, error: null, role: null, token: null, username: null, email: null}, action) => {
   switch(action.type) {
     case 'AUTH_USER':
       return {
@@ -143,7 +194,9 @@ export const authReducer = (state = {isAuth: false, error: null, role: null, tok
         isAuth: true,
         error: null,
         role: action.role,
-        token: action.token
+        token: action.token,
+        username: action.username,
+        email: action.email
       };
     case 'AUTH_ERROR':
       return {
@@ -156,7 +209,9 @@ export const authReducer = (state = {isAuth: false, error: null, role: null, tok
         isAuth: false,
         error: null,
         role: null,
-        token: null
+        token: null,
+        username: null,
+        email: null
       }
     default:
       return state;

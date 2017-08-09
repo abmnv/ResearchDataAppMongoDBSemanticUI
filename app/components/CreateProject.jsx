@@ -3,20 +3,33 @@ import {connect} from 'react-redux';
 import * as actions from 'actions';
 import ProgressButton from 'react-progress-button';
 import {Field, reduxForm, formValueSelector} from 'redux-form';
-import {Card, Form, Input, Label, TextArea, Button, Grid, Icon, Progress} from 'semantic-ui-react';
+import {Card, Form, Input, Label, TextArea, Button, Grid, Icon, Progress, Checkbox, Dropdown} from 'semantic-ui-react';
+import SpinningWheel from 'SpinningWheel';
 
 import SimpleFileList from 'SimpleFileList';
 
 const validate = (values) => {
   const errors = {};
-  //console.log('Validate values:', values);
+  console.log('Validate values:', values);
 
   if(!values.title){
-    errors.title = 'Please enter title'
+    errors.title = 'Please enter title';
   }
 
   if(!values.description){
-    errors.description = 'Please enter description'
+    errors.description = 'Please enter description';
+  }
+
+  if(values.requiresPermission && !values.dua){
+    errors.dua = 'Please, enter Data User Agreement';
+  }
+
+  if(!values.managers){
+    errors.managers = 'Managers are not specified';
+  }
+
+  if(values.managers && values.managers.length === 0){
+    errors.managers = 'At least one manager should be specified';
   }
 
   return errors;
@@ -28,7 +41,8 @@ class CreateProject extends React.Component {
     super(props);
 
     this.state = {
-      loading: false,
+      buttonLoading: false,
+      requirePermissionChecked: false
     }
   }
 
@@ -38,22 +52,17 @@ class CreateProject extends React.Component {
     //console.log('values:', values);
     //change('buttonStatus', 'loading');
     this.setState({
-      loading: true
+      buttonLoading: true
     });
 
     dispatch(actions.startCreateProject({...values, change})).then(() => {
       reset();
-      
+
       this.setState({
-        loading: false,
+        buttonLoading: false,
       })
     });
   }
-
-  // adaptFileEventToValueLogoImage = (e) => {
-  //   const {change} = this.props;
-  //   change('logoImage', {file: e.target.files[0], progress: 0});
-  // }
 
   adaptFileEventToValueLogoImage = (inputOnChange) => {
     return (e) => {
@@ -120,18 +129,8 @@ class CreateProject extends React.Component {
   renderTextArea = ({input, label, placeholder, meta: {touched, error}}) => {
     //console.log('renderField description touched, error:', touched, error);
     return (
-      <Form.TextArea inline autoHeight label={label} placeholder={placeholder} {...input} error={touched && error}/>
+      <Form.TextArea inline rows={3} label={label} placeholder={placeholder} {...input} error={touched && error}/>
     );
-    // <fieldset>
-    //   <div className="row">
-    //     <label className="column small-3 project-label">
-    //       {label}
-    //     </label>
-    //     <div className="column small-9">
-    //       <textarea {...input} placeholder={placeholder}></textarea>
-    //     </div>
-    //   </div>
-    // </fieldset>
   }
 
   renderLogoImage = ({input, label, type}) => {
@@ -148,27 +147,8 @@ class CreateProject extends React.Component {
         <SimpleFileList fileList={input.value ? [input.value] : []}/>
       </div>
     );
-    // <Button basic color="red" size="mini">Select</Button>
-    // <Icon name="attach" size="big"/>
-
-    //<Form.Input label={label} type={type} onChange={this.adaptFileEventToValueLogoImage(input.onChange)}/>
-
-    // <fieldset>
-    //   <div className="row">
-    //     <p className="column small-3 project-label middle">
-    //       {label}
-    //     </p>
-    //     <div className="column small-2">
-    //       <label htmlFor={input.name} className="button tiny radius">Select</label>
-    //       <input type={type} id={input.name} className="show-for-sr" onChange={this.adaptFileEventToValueLogoImage(input.onChange)}></input>
-    //     </div>
-    //     <div className="column small-7">
-    //       <SimpleFileList fileList={input.value ? [input.value] : []}/>
-    //     </div>
-    //   </div>
-    // </fieldset>
-    //(input.onChange)
   }
+
 
   renderFileList = ({input, label, type}) => {
     //console.log('renderFileUploader this.fileUploader', this.fileUploader);
@@ -200,6 +180,48 @@ class CreateProject extends React.Component {
     // </fieldset>
   }
 
+  renderManagers = ({input, label, type, meta: {touched, error}}) => {
+    //console.log('renderFileUploader this.fileUploader', this.fileUploader);
+    const {users, username} = this.props;
+    //console.log('renderManagers users:', users);
+    const options = users.map(({username}) => ({key: username, text: username, value: username}));
+    const value = input.value || [username];
+    //console.log('options:', options);
+
+    return (
+      <Form.Field>
+        <label>{label}</label>
+        <Dropdown placeholder="Managers" className="medium-top-margin" fluid multiple selection options={options} value={value} onChange={(e, {value}) => input.onChange(value)} error={touched && error}/>
+      </Form.Field>
+    );
+  }
+
+  renderRequiresPermission = ({input, label, type}) => {
+    //console.log('renderRequiresPermission input:', input);
+    return (
+      <Form.Checkbox toggle label={label} onChange={(e, {checked}) => input.onChange(checked)} checked={input.checked}/>
+    )
+    // input.onChange(event, data
+    // <input label={label} {...input} type={type}/>
+  }
+
+  renderAllowedUsers = ({input, label, type, meta: {touched, error}}) => {
+    //console.log('renderFileUploader this.fileUploader', this.fileUploader);
+    const {users} = this.props;
+    //console.log('renderManagers users:', users);
+    const options = users.map(({username}) => ({key: username, text: username, value: username}));
+    const value = input.value || [];
+    //console.log('options:', options);
+
+    return (
+      <Form.Field>
+        <label>{label}</label>
+        <Dropdown placeholder="Users" className="medium-top-margin" fluid multiple selection options={options} value={value} onChange={(e, {value}) => input.onChange(value)}/>
+      </Form.Field>
+    );
+  }
+
+
   // componentWillUpdate (nextProps, nextState) {
   //   const {title, description, buttonStatus, change} = nextProps;
   //   // console.log('componentWillUpdate title:', title);
@@ -221,24 +243,76 @@ class CreateProject extends React.Component {
     console.log('this should reset form');
   }
 
+  handleChangeRequirePermission = () => {
+    const {requirePermissionChecked} = this.state;
+    this.setState({
+      requirePermissionChecked: !requirePermissionChecked
+    })
+  }
+
   render () {
+    const {requiresPermission, isLoading} = this.props;
+    //console.log('isLoading:', isLoading);
+    const {buttonLoading} = this.state;
+
+    const dua = () => {
+      if(requiresPermission){
+        return (
+          <div>
+            <Field name="dua" component={this.renderTextArea} label="Data User Agreement:" placeholder="You can provide Data User Agreement here"/>
+            <Field name="allowedUsers" component={this.renderAllowedUsers} label="Allowed Users"/>
+          </div>
+        )
+      }else{
+        return null;
+      }
+    }
+
+    const createProject = () => {
+      if(isLoading){
+        return (
+          <SpinningWheel/>
+        )
+      }else{
+        return (
+          <Card fluid>
+            <Card.Content>
+              <Form>
+                <Field name="title" component={this.renderField} type="text" label="Title:" placeholder="My awesome project"/>
+                <Field name="description" component={this.renderTextArea} label="Description:" placeholder="Description of my awesome project"/>
+                <Field name="logoImage" component={this.renderLogoImage} type="file" label="Logo:"/>
+                <Field name="fileList" component={this.renderFileList} type="file" label="Attach Files:"/>
+                <Field name="managers" component={this.renderManagers} label="Managers"/>
+                <Field name="requiresPermission" component={this.renderRequiresPermission} type="checkbox" label="Requires Permission"/>
+                {dua()}
+              </Form>
+              <div className="large-top-margin">
+                <Button primary loading={buttonLoading} floated="right" onClick={this.props.handleSubmit(this.handleCreateProject)}>Save</Button>
+                <Button negative floated="right" onClick={this.resetForm}>Reset</Button>
+              </div>
+            </Card.Content>
+          </Card>
+        )
+      }
+    }
+
     return (
       <div>
-        <Card fluid>
-          <Card.Content>
-            <Form onSubmit={this.props.handleSubmit(this.handleCreateProject)}>
-              <Field name="title" component={this.renderField} type="text" label="Title:" placeholder="My awesome project"/>
-              <Field name="description" component={this.renderTextArea} label="Description:" placeholder="Description of my awesome project"/>
-              <Field name="logoImage" component={this.renderLogoImage} type="file" label="Logo:"/>
-              <Field name="fileList" component={this.renderFileList} type="file" label="Attach Files:"/>
-              <Button primary loading={this.state.loading} floated="right">Save</Button>
-            </Form>
-            <Button negative floated="right" onClick={this.resetForm}>Reset</Button>
-          </Card.Content>
-        </Card>
+        {createProject()}
       </div>
     )
+
+    // <Form.Checkbox toggle label="Requires Permission" onChange={this.handleChangeRequirePermission} checked={requirePermissionChecked}/>
+
+    // <div className="large-top-margin">
+    //   <Button primary loading={loading} floated="right" onClick={this.props.handleSubmit(this.handleCreateProject)}>Save</Button>
+    //   <Button negative floated="right" onClick={this.resetForm}>Reset</Button>
+    // </div>
+    // <div className="medium-top-margin">
+    //   <Checkbox toggle label="Requires Permission" onChange={this.handleChangeRequirePermission} checked={requirePermissionChecked}/>
+    // </div>
   }
+  // <div style={{clear:"both"}}/>
   // <div className="create-project">
   //   <form onSubmit={this.props.handleSubmit(this.handleCreateProject)}>
   //     <Field name="title" component={this.renderField} type="text" label="Title:" placeholder="My awesome project"/>
@@ -262,8 +336,13 @@ CreateProject = reduxForm({
   validate
 })(CreateProject);
 
-CreateProject = connect()(CreateProject);
-  // (state) => {
+CreateProject = connect((state) => {  //)(CreateProject);
+  const requiresPermission = selector(state, 'requiresPermission');
+  const {users, isLoading, auth: {username}} = state;
+  const initialValues = {
+    managers: [username]
+  }
+  // console.log('users:', users);
   // const title = selector(state, 'title');
   // const description = selector(state, 'description');
   // const buttonStatus = selector(state, 'buttonStatus');
@@ -276,9 +355,8 @@ CreateProject = connect()(CreateProject);
   // const initialValues = {
   //   buttonStatus: 'disabled'
   // }
-
-  //return {title, description, buttonStatus};
-// })(CreateProject);
+  return {requiresPermission, users, isLoading, username, initialValues};
+})(CreateProject);
 
 export default CreateProject;
 

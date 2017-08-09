@@ -3,6 +3,7 @@ import {connect} from 'react-redux';
 
 import LoginModal from 'LoginModal';
 import SignUpModal from 'SignUpModal';
+import DUAModal from 'DUAModal';
 
 class ModalContainer extends React.Component {
 
@@ -16,6 +17,8 @@ class ModalContainer extends React.Component {
           return (<LoginModal/>);
         case 'SignUp':
           return (<SignUpModal/>);
+        case 'DUA':
+          return (<DUAModal/>);
         default:
           return null;
       }

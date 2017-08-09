@@ -12,6 +12,19 @@ export const getFileBlob = (file) => {
   });
 }
 
+export const addDUARequest = (values, projectId, token) => {
+  const config = {
+    headers: {
+      'x-auth': token
+    }
+  }
+  return axios.post(`/projects/${projectId}/duaRequests`, values, config).then((res) => {
+    return res.data;
+  }).catch((err) => {
+    throw err;
+  })
+}
+
 export const signUp = (username, email, password) => {
   return axios.post('/users', {
     username,
@@ -109,18 +122,58 @@ export const updateProject = (projectId, formData, uploadProgress, token) => {
 }
 
 export const updateProjectManagers = (projectId, managers, token) => {
+  //console.log('updateProjetMangers token:', token);
   const config = {
     headers: {
       'x-auth': token
-    },
-    data: {
-      managers
     }
   }
-  return axios.patch(`/projects/${projectId}/managers`, config).then((res) => {
+  return axios.patch(`/projects/${projectId}/managers`, {managers}, config).then((res) => {
     return res.data;
   }).catch((err) => {
     throw err;
+  });
+}
+
+export const updateAllowedUsers = (projectId, allowedUsers, token) => {
+  //console.log('updateProjetMangers token:', token);
+  const config = {
+    headers: {
+      'x-auth': token
+    }
+  }
+  return axios.patch(`/projects/${projectId}/allowedUsers`, {allowedUsers}, config).then((res) => {
+    return res.data;
+  }).catch((err) => {
+    throw err;
+  });
+}
+
+export const addUserToAllowedUsers = (projectId, username, token) => {
+  //console.log('updateProjetMangers token:', token);
+  const config = {
+    headers: {
+      'x-auth': token
+    }
+  }
+  return axios.post(`/projects/${projectId}/allowedUsers`, {username}, config).then((res) => {
+    return res.data;
+  }).catch((err) => {
+    return Promise.reject(err);
+  });
+}
+
+export const deleteDUARequest = (projectId, DUARequestId, token) => {
+  //console.log('updateProjetMangers token:', token);
+  const config = {
+    headers: {
+      'x-auth': token
+    }
+  }
+  return axios.delete(`/projects/${projectId}/DUARequests/${DUARequestId}`, config).then((res) => {
+    return res.data;
+  }).catch((err) => {
+    return Promise.reject(err);
   });
 }
 

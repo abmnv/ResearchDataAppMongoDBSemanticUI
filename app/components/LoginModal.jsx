@@ -92,7 +92,7 @@ class LoginModal extends React.Component {
     const {dispatch, change, untouch} = this.props;
     dispatch(actions.startUsernamePasswordLogin(values.username, values.password)).then(() => {
       dispatch(actions.setCurrentModal(null));
-      dispatch(actions.startAddUsers());
+      dispatch(actions.startUpdateUsers());
       // dispatch(actions.setRedirectUrl('/'));
       // hashHistory.push(this.props.redirectUrl);
     }).catch(() => {

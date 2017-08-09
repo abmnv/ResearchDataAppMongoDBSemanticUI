@@ -82,6 +82,34 @@ UserSchema.statics.findByCredentials = function(username, password) {
   });
 }
 
+UserSchema.statics.updateUserRoles = function(usernames, role) {
+  const User = this;
+  let error = null;
+
+  usernames.forEach((username) => {
+    User.findOne({username}).then((user) => {
+      if(!user){
+        return Promise.reject('Username is not found');
+      }
+
+      if(user.role === "user"){
+        user.role = role;
+      }
+
+      user.save();
+    }).catch((err) => {
+      error = err;
+      throw(err);
+    });
+  });
+
+  if(error){
+    return Promise.reject(error);
+  }else{
+    return Promise.resolve();
+  }
+}
+
 UserSchema.methods.toJSON = function() {
   const user = this;
 
