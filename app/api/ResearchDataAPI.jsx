@@ -86,6 +86,20 @@ export const getUsers = (token) => {
   });
 }
 
+export const updateUserRole = (id, role, token) => {
+  //console.log('updateProjetMangers token:', token);
+  const config = {
+    headers: {
+      'x-auth': token
+    }
+  }
+  return axios.patch(`/users/${id}/role`, {role}, config).then((res) => {
+    return res.data;
+  }).catch((err) => {
+    throw err;
+  });
+}
+
 export const createProject = (formData, token, uploadProgress) => {
   const config = {
     headers: {

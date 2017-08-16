@@ -266,8 +266,15 @@ app.post('/projects/:projectId/duaRequests', authenticate, (req, res) => {
     return project.save();
   }).then((doc) => {
     if(!doc){
-      return Promise.reject('NotFound');
+      return Promise.reject('NotFound')
     }
+    //find DUARequest and send it
+    // let subDoc;
+    // doc.DUARequests.forEach((r) => {
+    //   if(r.username === values.username){
+    //     subDoc = r;
+    //   }
+    // });
     res.send(doc);
   }).catch((err) => {
     // console.log('error:', err);
@@ -347,7 +354,7 @@ app.patch('/projects/:projectId/managers', authenticate, authAllowedManagerOrAdm
 });
 
 app.patch('/projects/:projectId/allowedUsers', authenticate, authAllowedManagerOrAdmin, (req, res) => {
-  const projectId = req.params.projectId;
+  const {projectId} = req.params;
   //const body = _.pick(req.body, 'managers');
   const {allowedUsers} = req.body;
 
@@ -529,6 +536,30 @@ app.post('/users', (req, res) => {
       res.status(400).send({message: 'This username is already used!'});
     }else{
       res.status(400).send(err);
+    }
+  });
+});
+
+app.patch('/users/:id/role', authenticate, authAdmin, (req, res) => {
+  const {id} = req.params;
+  const {role} = req.body;
+  // const body = _.pick(req.body, ['username']);
+  console.log('role:', role);
+
+  //console.log('user:', user);
+  User.findById(id).then((user) => {
+    if(!user){
+      return Promise.reject('NotFound');
+    }
+    user.role = role;
+    return user.save();
+  }).then((doc) => {
+    res.send(doc);
+  }).catch((err) => {
+    if(err === 'NotFound'){
+      res.status(404).send();
+    }else{
+      res.status(400).send();
     }
   });
 });

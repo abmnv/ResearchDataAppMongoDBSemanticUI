@@ -55,9 +55,20 @@ class ManageProject extends React.Component {
       });
     }
 
+    //update allowedUsers only if arrays are different ie allowedUsers array changed in the
+    //redux store
     if(!this.props.isLoading && areArraysDifferent(this.props.allowedUsers, nextProps.allowedUsers)){
       this.setState({
         allowedUsers: nextProps.allowedUsers
+      });
+    }
+
+    if(!this.props.isLoading && areArraysDifferent(this.props.DUARequests, nextProps.DUARequests)){
+      const DUARequestsStatus = nextProps.DUARequests.map((req) => {
+        return null;
+      });
+      this.setState({
+        DUARequestsStatus
       });
     }
   }
@@ -123,7 +134,9 @@ class ManageProject extends React.Component {
         });
       }else if(status === 'reject'){
         seq = seq.then(() => {
-          dispatch(actions.startRejectDUARequest(id, i));
+          const DUARequestId = DUARequests[i].id;
+          dispatch(actions.startRejectDUARequest(id, DUARequestId));
+
         });
       }
     });

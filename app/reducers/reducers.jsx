@@ -136,7 +136,8 @@ export const projectReducer = (state = [], action) => {
     case 'ADD_USER_TO_ALLOWED_USERS':
       return state.map((project) => {
         if(project.id === action.id){
-          return {...project, allowedUsers: [...project.allowedUsers, action.username]}
+          //Set insures that array is unque
+          return {...project, allowedUsers: [...new Set([...project.allowedUsers, action.username])]}
         }else{
           return project
         }
@@ -177,10 +178,24 @@ export const userReducer = (state = [], action) => {
         ...state,
         ...action.users
       ];
+
     case 'UPDATE_USERS':
       return [
         ...action.users
       ];
+
+    case 'UPDATE_USER_ROLE':
+      return state.map((user) => {
+        if(user.id === action.id){
+          return {...user, role: action.role}
+        }else{
+          return user;
+        }
+      });
+
+    case 'REMOVE_USERS':
+      return []
+
     default:
       return state;
   }
@@ -198,11 +213,13 @@ export const authReducer = (state = {isAuth: false, error: null, role: null, tok
         username: action.username,
         email: action.email
       };
+
     case 'AUTH_ERROR':
       return {
         ...state,
         error: action.error
       }
+
     case 'LOGOUT':
       return {
         ...state,
@@ -213,6 +230,7 @@ export const authReducer = (state = {isAuth: false, error: null, role: null, tok
         username: null,
         email: null
       }
+
     default:
       return state;
   }

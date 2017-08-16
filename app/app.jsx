@@ -14,6 +14,7 @@ import Login from 'Login';
 import SignUp from 'SignUp';
 import EnsureLoggedInContainer from 'EnsureLoggedInContainer';
 import ManageProject from 'ManageProject';
+import Users from 'Users';
 //import 'semantic-ui-css/semantic.min.css';
 
 var store = require('configureStore').configure();
@@ -42,16 +43,17 @@ ReactDOM.render(
         <IndexRoute component={Projects}/>
         <Route path="/projects/:projectId" component={DetailedProject}/>
         <Route component={EnsureLoggedInContainer}>
-          <Route path="/edit-projects" component={Projects}/>
           <Route path="/create-project" component={CreateProject}/>
-          <Route path="/edit-projects/:projectId/edit" component={EditProject}/>
-          <Route path="/edit-projects/:projectId/manage" component={ManageProject}/>
+          <Route path="/projects/:projectId/edit" component={EditProject}/>
+          <Route path="/projects/:projectId/manage" component={ManageProject}/>
+          <Route path="/users" component={Users}/>
         </Route>
       </Route>
     </Router>
   </Provider>,
   document.getElementById('app')
 );
+// <Route path="/edit-projects" component={Projects}/>
 // <Route path="/login" component={Login}/>
 // <Route path="/signup" component={SignUp}/>
 //<Route path="data" component={Data}/>

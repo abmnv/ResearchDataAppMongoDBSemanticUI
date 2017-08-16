@@ -70,11 +70,18 @@ export const addDUARequest = (values, id) => {
   }
 }
 
+//id here corresponds to project id
 export const startAddDUARequest = (values, id) => {
   return (dispatch, getState) => {
     const {auth: {token, email, username}} = getState();
     return dbAPI.addDUARequest({...values, email, username}, id, token).then((project) => {
-      dispatch(addDUARequest({...values, email, username}, id));
+      let DUARequestId;
+      project.DUARequests.forEach((req) => {
+        if(req.username === username){
+          DUARequestId = req.id;
+        }
+      });
+      dispatch(addDUARequest({...values, email, username, id: DUARequestId}, id));
     }).catch((err) => {
       return Promise.reject(err);
     })
@@ -124,13 +131,15 @@ export const startUsernamePasswordLogin = (username, password) => {
     return dbAPI.login(username, password).then((user) => {
       console.log('startEmailPasswordLogin user:', user);
       const decoded = jwtDecode(user.token);
-      dispatch(authUser(user.token, decoded.role, decoded.username, decoded.email));
+      dispatch(authUser(user.token, decoded.role, decoded.username, decoded.email))
       localStorage.setItem('researchDataAppToken', user.token);
+
+      dispatch(startUpdateUsers());
       return Promise.resolve();
     }).catch((err) => {
       console.log('startEmailPasswordLogin error:', err);
       dispatch(authError(err));
-      return Promise.reject();
+      return Promise.reject(err);
     });
 
     // return firebase.auth().signInWithEmailAndPassword(credentials.email, credentials.password).then((user) => {
@@ -163,6 +172,12 @@ export var login = () => {
 //   }
 // }
 
+export var removeUsers = () => {
+  return {
+    type: 'REMOVE_USERS',
+  }
+}
+
 export var logout = () => {
   return {
     type: 'LOGOUT',
@@ -175,7 +190,9 @@ export var startLogout = () => {
     return dbAPI.logout(token).then(() => {
       //console.log('token was removed from MongoDB');
       localStorage.removeItem('researchDataAppToken');
-      dispatch(logout());
+      return dispatch(removeUsers());
+    }).then(() => {
+      return dispatch(logout());
     }).catch((err) => {
       //console.log('Logout error:', err);
     })
@@ -208,7 +225,8 @@ export var startDeleteProject = (projectId) => {
 
     return dbAPI.deleteProject(projectId, token).then((project) => {
       dispatch(deleteProject(projectId));
-    })
+      return Promise.resolve();
+    });
   }
 }
 
@@ -249,7 +267,7 @@ export const startAddState = () => {
     }).then(() => {
       dispatch(setLoadingStatus(false));
     }).catch((err) => {
-      throw err;
+      return Promise.reject(err);
     });
   }
 }
@@ -347,6 +365,7 @@ export const updateAllowedUsers = (id, allowedUsers) => {
 export const startApproveDUARequest = (projectId, DUARequestId) => {
   return (dispatch, getState) => {
     const {auth: {token}, projects} = getState();
+    //find out the username for the request
     let project;
     projects.forEach((p) => {
       if(p.id === projectId){
@@ -373,6 +392,19 @@ export const startApproveDUARequest = (projectId, DUARequestId) => {
   }
 }
 
+export const startRejectDUARequest = (projectId, DUARequestId) => {
+  return (dispatch, getState) => {
+    const {auth: {token}, projects} = getState();
+    //find out the username for the request
+
+    return dbAPI.deleteDUARequest(projectId, DUARequestId, token).then(() => {
+      dispatch(deleteDUARequest(projectId, DUARequestId));
+    }).catch((err) => {
+      return Promise.reject(err);
+    });
+  }
+}
+
 export const addUserToAllowedUsers = (projectId, username) => {
   return {
     type: 'ADD_USER_TO_ALLOWED_USERS',
@@ -388,6 +420,24 @@ export const deleteDUARequest = (projectId, DUARequestId) => {
     DUARequestId
   }
 }
+
+export const startUpdateUserRole = (id, role) => {
+  return (dispatch, getState) => {
+    const {auth: {token}} = getState();
+    return dbAPI.updateUserRole(id, role, token).then(() => {
+      dispatch(updateUserRole(id, role));
+    });
+  }
+}
+
+export const updateUserRole = (id, role) => {
+  return {
+    type: 'UPDATE_USER_ROLE',
+    id,
+    role
+  }
+}
+
 // export var startAddProjects = () => {
 //
 //   return (dispatch, getState) => {

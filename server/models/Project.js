@@ -161,8 +161,14 @@ const ProjectSchema = new Schema({
     minlength: 1,
     trim: true
   },
-  managers: [String],
-  allowedUsers: [String],
+  managers: [{
+    type: String,
+    unique: true
+  }],
+  allowedUsers: [{
+    type: String,
+    unique: true
+  }],
   DUARequests: [DUARequestSchema],
   files: [FileSchema]
 });
@@ -186,7 +192,7 @@ ProjectSchema.methods.toJSON = function() {
   const DUARequests = projectObj.DUARequests.map((doc) => {
     doc.id = doc._id;
     delete doc._id;
-    
+
     return doc;
   });
 

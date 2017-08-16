@@ -250,7 +250,7 @@ class EditProject extends React.Component {
         <div className="field error">
           <span>{label}</span>
           <div className="ui checkbox fitted right">
-            <input tabindex="0" class="hidden" onChange={(checked)=>(onChange(checked))} name={name} checked={checked} type={type} value={value}/>
+            <input tabIndex="0" className="hidden" onChange={(checked)=>(onChange(checked))} name={name} checked={checked} type={type} value={value}/>
             <label></label>
           </div>
         </div>

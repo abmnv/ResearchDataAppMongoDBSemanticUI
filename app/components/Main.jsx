@@ -4,9 +4,10 @@ import ModalContainer from 'ModalContainer';
 import {Grid} from 'semantic-ui-react';
 
 var Main = (props) => {
+  // console.log('location:', props.location);
   return (
     <div>
-      <Nav/>
+      <Nav location={props.location}/>
       <ModalContainer/>
       <Grid centered columns="2">
           <Grid.Column textAlign="left">

@@ -49,8 +49,8 @@ class Nav extends React.Component {
   handleMenuItemClick = (e, {name}) => {this.setState({activeItem: name})}
 
   render () {
-    const {isAuth, role, username} = this.props;
-    console.log('username:', username);
+    const {isAuth, role, username, location} = this.props;
+    // console.log('location:', location);
 
     const auth = () => {
       if(isAuth){
@@ -77,34 +77,57 @@ class Nav extends React.Component {
     //const auth = isAuth ? (<Link activeClassName="active-link" onClick={this.handleLogout}>Logout</Link>) : (<Link activeClassName="active-link" to="/login">Login</Link>);
     //const auth = isAuth ? (<Link activeClassName="active-link" onClick={this.handleLogout}>Logout</Link>) : (<button className='login-button' onClick={this.handleOpenLoginModal}>Login</button>);
     const menu = () => {
-      if(role === 'user' || role === null){
-        return null;
-      } else {
-        return (
-          <Menu.Menu position="left">
-            <Menu.Item as={IndexLink}
-              to="/"
-              name="projects"
-              active={activeItem === 'projects'}
-              onClick={this.handleMenuItemClick}>
-              Projects
-            </Menu.Item>
-            <Menu.Item as={Link}
+
+      const addMenu = () => {
+        let menu = [];
+        if(role === 'manager' || role === 'admin'){
+          menu.push(
+            <Menu.Item key="create-project" as={Link}
               to="/create-project"
-              name='create-project'
+              name="create-project"
               active={activeItem === 'create-project'}
               onClick={this.handleMenuItemClick}>
               Create Project
             </Menu.Item>
-            <Menu.Item as={Link}
-              to="/edit-projects"
-              name='edit-projects'
-              active={activeItem === 'edit-projects'}
+          )
+
+
+        }
+        if(role === 'admin') {
+          menu.push(
+            <Menu.Item key="users" as={Link}
+              to="/users"
+              name="users"
+              active={activeItem === 'users'}
               onClick={this.handleMenuItemClick}>
-              Edit Projects
+              Users
             </Menu.Item>
-          </Menu.Menu>
-        )
+          )
+        }
+
+        return menu;
+      }
+
+      return (
+        <Menu.Menu position="left">
+          <Menu.Item as={IndexLink}
+            to="/"
+            name="projects"
+            active={activeItem === 'projects'}
+            onClick={this.handleMenuItemClick}>
+            Projects
+          </Menu.Item>
+          {addMenu()}
+        </Menu.Menu>
+      )
+
+        // <Menu.Item as={Link}
+        //   to="/edit-projects"
+        //   name='edit-projects'
+        //   active={activeItem === 'edit-projects'}
+        //   onClick={this.handleMenuItemClick}>
+        //   Edit Projects
+        // </Menu.Item>
         // <Menu.Item as={Link}
         //   to="/manage-project"
         //   name="manage-project"
@@ -112,7 +135,7 @@ class Nav extends React.Component {
         //   onClick={this.handleMenuItemClick}>
         //   Manage Project
         // </Menu.Item>
-      }
+
     }
     const {activeItem} = this.state;
 

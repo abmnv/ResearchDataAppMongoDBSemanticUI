@@ -32,6 +32,7 @@ class Project extends React.Component {
     hashHistory.push('/edit-projects/' + id);
   }
 
+
   render () {
     var {title, createdAt, id, description, logoImage, requiresPermission=null, editModeStatus} = this.props;
     var briefDescription = description.length < 120 ? description : description.slice(0, 120) + '...';
@@ -56,85 +57,38 @@ class Project extends React.Component {
       return null;
     }
 
-    const dua = () => {
+    const duaLabel = () => {
       if(requiresPermission){
         return (
           <Label color="red" attached="top right">DUA</Label>
         )
+        // attached
       }else{
         return null;
       }
     }
 
     return (
-      <Card fluid>
-
-        <Card.Content as={Link} to={'/projects/'+id}>
-
-          <Image floated="left" size="tiny" src={logoImage.url}/>
-          {dua()}
-          <Card.Header>
-            {title}
-          </Card.Header>
-
-          <Card.Meta>
-            Created on {moment.unix(createdAt).format('MMM Do, YYYY @ h:mm a')}
-          </Card.Meta>
-
-          <Card.Description>
-            {briefDescription}
-          </Card.Description>
-        </Card.Content>
-
-        {projectControlBar()}
-      </Card>
+      <div>
+        <Card fluid>
+          <Card.Content as={Link} to={'/projects/'+id}>
+            <Image floated="left" size="tiny" src={logoImage.url}/>
+            {duaLabel()}
+            <Card.Header>
+              {title}
+            </Card.Header>
+            <Card.Meta>
+              Created on {moment.unix(createdAt).format('MMM Do, YYYY @ h:mm a')}
+            </Card.Meta>
+            <Card.Description>
+              {briefDescription}
+            </Card.Description>
+          </Card.Content>
+          {projectControlBar()}
+        </Card>
+      </div>
     );
     // <Label color="red" attached="top">DUA</Label>
-
-    // floated="left"
-    // <Card as={Link} to={'/projects/'+id}>
-    //   <Card.Content>
-    //     <Grid columns={2}>
-    //       <Grid.Row>
-    //         <Grid.Column width={4}>
-    //           <Image src={logoImage.url}/>
-    //         </Grid.Column>
-    //         <Grid.Column width={12}>
-    //           <Card.Header className="card-header">
-    //             {title}
-    //           </Card.Header>
-    //           <Card.Meta>
-    //             Created on {moment.unix(createdAt).format('MMM Do, YYYY @ h:mm a')}
-    //           </Card.Meta>
-    //           <Card.Description>
-    //             {briefDescription}
-    //           </Card.Description>
-    //         </Grid.Column>
-    //       </Grid.Row>
-    //     </Grid>
-    //   </Card.Content>
-    //   {projectControlBar()}
-    // </Card>
-
-    // <div>
-    //   <div className="project">
-    //     <Link to={'/projects/'+id} className="button expanded hollow project-button">
-    //       <div className="row">
-    //         <div className="column small-3">
-    //           <div className="image-container">
-    //             <img src={logoImage.url}/>
-    //           </div>
-    //         </div>
-    //         <div className="column small-9">
-    //           <h4>{title}</h4>
-    //           <p className="date-created">Created on {moment.unix(createdAt).format('MMM Do, YYYY @ h:mm a')}</p>
-    //           <p className="brief-description">{briefDescription}</p>
-    //         </div>
-    //       </div>
-    //     </Link>
-    //   </div>
-    //   {editModeStatus ? (<ProjectControlBar onDelete={this.handleDeleteProject} onEdit={this.handleEditProject}/>) : null}
-    // </div>
   }
 };
 

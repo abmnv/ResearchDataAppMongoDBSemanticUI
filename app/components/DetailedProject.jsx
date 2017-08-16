@@ -6,11 +6,13 @@ import DownloadButton from 'ZipDownloadButton';
 import JSZip from 'jszip';
 import {Card, Header, Grid, Image, Checkbox, List, Button, Icon, Label, Segment} from 'semantic-ui-react';
 import SpinningWheel from 'SpinningWheel';
+import {Link, hashHistory} from 'react-router';
 
 import FileList from 'FileList';
 import {getFileBlob} from 'ResearchDataAPI';
 import * as actions from 'actions';
 import DUAModal from 'DUAModal';
+import ConfirmDeleteProjectModal from 'ConfirmDeleteProjectModal';
 
 class DetailedProject extends React.Component {
 
@@ -29,13 +31,18 @@ class DetailedProject extends React.Component {
     this.state = {
       fileSelection,
       areAllFilesSelected: false,
-      DUAModalOpen: false
+      DUAModalOpen: false,
+      confirmDeleteProjectModalOpen: false,
+      isDeletingProject: false
     }
 
     this.handleToggleFileSelection = this.handleToggleFileSelection.bind(this);
     this.handleDownloadSelectedFiles = this.handleDownloadSelectedFiles.bind(this);
     this.handleCloseDUAModal = this.handleCloseDUAModal.bind(this);
     this.handleDUASubmit = this.handleDUASubmit.bind(this);
+    this.handleOpenConfirmDeleteProjectModal = this.handleOpenConfirmDeleteProjectModal.bind(this);
+    this.handleCloseConfirmDeleteProjectModal = this.handleCloseConfirmDeleteProjectModal.bind(this);
+    this.handleDeleteProject = this.handleDeleteProject.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -180,9 +187,34 @@ class DetailedProject extends React.Component {
     // });
   }
 
+  handleCloseConfirmDeleteProjectModal () {
+    this.setState({
+      confirmDeleteProjectModalOpen: false
+    });
+  }
+
+  handleDeleteProject () {
+    var {dispatch, id, files} = this.props;
+    this.setState({
+      confirmDeleteProjectModalOpen: false,
+      isDeletingProject: true
+    });
+    dispatch(actions.startDeleteProject(id, files)).then(() => {
+      console.log('Deleting project...');
+      hashHistory.push('/');
+    });
+  }
+
+  handleOpenConfirmDeleteProjectModal () {
+    console.log('handleOpenConfirmDeleteProjectModal');
+    this.setState({
+      confirmDeleteProjectModalOpen: true
+    });
+  }
+
   render () {
-    const {id, title, createdAt, description, files, logoImage, requiresPermission, dua, managers, allowedUsers, isLoading, username, DUARequests} = this.props;
-    const {fileSelection, areAllFilesSelected, DUAModalOpen} = this.state;
+    const {id, title, createdAt, description, files, logoImage, requiresPermission, dua, managers, allowedUsers, isLoading, username, role, DUARequests} = this.props;
+    const {fileSelection, areAllFilesSelected, DUAModalOpen, isDeletingProject} = this.state;
     // console.log('dua:', dua)
     //console.log('areAllFilesSelected:', areAllFilesSelected);
     //console.log('fileSelection:', fileSelection);
@@ -192,6 +224,10 @@ class DetailedProject extends React.Component {
 
       if(!username){
         return 'requiresLoginOrSignup';
+      }
+
+      if(!requiresPermission || role === 'admin'){
+        return 'allowed';
       }
 
       managers.forEach((m) => {
@@ -223,10 +259,43 @@ class DetailedProject extends React.Component {
       return status;
     }
 
+    const manageProject = () => {
+
+      let allowed = false;
+
+      if(role === 'admin'){
+        allowed = true;
+      }
+
+      if(!allowed){
+        managers.forEach((m) => {
+          if(m === username){
+            allowed = true;
+          }
+        });
+      }
+
+      if(allowed){
+        return (
+          <Card.Content extra>
+            <Button.Group fluid>
+              <Button basic color="red" onClick={this.handleOpenConfirmDeleteProjectModal}>Delete</Button>
+              <Button basic color="green" as={Link} to={`/projects/${id}/manage`}>Manage</Button>
+              <Button basic color="blue" as={Link} to={`/projects/${id}/edit`}>Edit</Button>
+            </Button.Group>
+          </Card.Content>
+        )
+        // <Button basic color="red" size="tiny" onClick={this.handleDeleteProject}>Delete</Button>
+
+      }else{
+        return null;
+      }
+    }
+
     const fileList = () => {
 
       const status = getStatus();
-      console.log('status:', status);
+      // console.log('status:', status);
 
       switch(status){
         case 'allowed':
@@ -309,17 +378,27 @@ class DetailedProject extends React.Component {
       }
     }
 
-    if(isLoading){
+    const duaLabel = () => {
+      if(requiresPermission){
+        return (
+          <Label color="red" attached="top right">DUA</Label>
+        )
+      }else{
+        return null;
+      }
+    }
+
+    if(isLoading || isDeletingProject){
       return (
         <SpinningWheel/>
       )
     }else{
-
       return (
         <div>
           <Card fluid color="red" >
             <Card.Content>
               <Image floated="left" size="tiny" src={logoImage.url}/>
+              {duaLabel()}
               <Card.Header>
                 {title}
               </Card.Header>
@@ -330,11 +409,13 @@ class DetailedProject extends React.Component {
                 {description}
               </Card.Description>
             </Card.Content>
+            {manageProject()}
             <Card.Content extra>
               {fileList()}
             </Card.Content>
           </Card>
           <DUAModal open={DUAModalOpen} onClose={this.handleCloseDUAModal} dua={dua} onDUASubmit={this.handleDUASubmit}/>
+          <ConfirmDeleteProjectModal open={this.state.confirmDeleteProjectModalOpen} onClose={this.handleCloseConfirmDeleteProjectModal} onConfirm={this.handleDeleteProject}/>
         </div>
       );
     }
@@ -366,7 +447,7 @@ class DetailedProject extends React.Component {
 
 export default connect((state, ownProps) => {
   const {params: {projectId}} = ownProps;
-  const {projects, isLoading, auth: {username}} = state;
+  const {projects, isLoading, auth: {username, role}} = state;
   //console.log('projectId:', projectId);
 
   let currentProject;
@@ -377,7 +458,7 @@ export default connect((state, ownProps) => {
     }
   });
 
-  return {...currentProject, isLoading, username};
+  return {...currentProject, isLoading, username, role};
 })(DetailedProject);
 // <button className="button small success" onClick={this.handleDownloadSelectedFiles}>Download Selected</button>
 //<button className="button small success" onClick={this.handleDownloadAllFiles}>Download All</button>
