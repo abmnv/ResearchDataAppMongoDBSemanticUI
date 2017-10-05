@@ -2,7 +2,7 @@ import React from 'react';
 import {connect} from 'react-redux';
 import {Field, FieldArray, reduxForm, formValueSelector} from 'redux-form';
 import ProgressButton from 'react-progress-button';
-import {Card, Form, Input, Label, TextArea, Button, Grid, Icon, Progress, Checkbox, Image} from 'semantic-ui-react';
+import {Card, Form, Input, Label, TextArea, Button, Grid, Icon, Progress, Checkbox, Image, Dropdown} from 'semantic-ui-react';
 
 import FileList from 'FileList';
 import SimpleFileList from 'SimpleFileList';
@@ -20,6 +20,18 @@ const validate = (values) => {
     errors.description = 'Please enter description'
   }
 
+  if(values.requiresPermission && !values.dua){
+    errors.dua = 'Please, enter Data User Agreement';
+  }
+
+  if(!values.managers){
+    errors.managers = 'Managers are not specified';
+  }
+
+  if(values.managers && values.managers.length === 0){
+    errors.managers = 'At least one manager should be specified';
+  }
+
   return errors;
 }
 
@@ -35,7 +47,7 @@ class EditProject extends React.Component {
     const filesSelection = files.map((myFile) => {
       return false;
     });
-    //
+
     this.state = {
       //...currentProject,
       filesSelection,
@@ -50,7 +62,7 @@ class EditProject extends React.Component {
 
   handleUpdateProject (values) {
     //e.preventDefault();
-    const {dispatch, change, id, array} = this.props;
+    const {dispatch, change, untouch, id, requiresPermissionReduxForm, duaReduxForm, array} = this.props;
     // const {id, title, description} = this.state;
     // const {uploadFileList} = this.props;
     //var fileList = $.extend(true, [], this.refs.fileUploader.files);
@@ -63,6 +75,10 @@ class EditProject extends React.Component {
     dispatch(actions.startUpdateProject({...values, id, change, array})).then(() => {
       //console.log('startUpdateProject success');
       //change('buttonStatus', 'success');
+      if(!requiresPermissionReduxForm && duaReduxForm){
+        change('dua', '');
+        untouch('dua');
+      }
       this.setState({
         loading: false
       })
@@ -289,27 +305,64 @@ class EditProject extends React.Component {
         <SimpleFileList fileList={input.value ? input.value : []}/>
       </div>
     )
-    // <fieldset>
-    //   <div className="row">
-    //     <p className="column small-3 project-label">
-    //       {label}
-    //     </p>
-    //     <div className="column small-2 end text-align-left">
-    //       <label htmlFor={input.name} className="button tiny radius">Select</label>
-    //       <input type={type} id={input.name} multiple="multiple" className="show-for-sr" onChange={this.adaptFileEventToValueFileList(input.onChange)}></input>
-    //     </div>
-    //   </div>
-    //   <div className="row">
-    //     <div className="column small-offset-3 small-9 text-align-left">
-    //       <SimpleFileList fileList={input.value ? input.value : []}/>
-    //     </div>
-    //   </div>
-    // </fieldset>
+  }
+
+  renderManagers = ({input, label, type, meta: {touched, error}}) => {
+    //console.log('renderFileUploader this.fileUploader', this.fileUploader);
+    const {users, username} = this.props;
+    //console.log('renderManagers users:', users);
+    const options = users.map(({username}) => ({key: username, text: username, value: username}));
+    const value = input.value || [username];
+    //console.log('options:', options);
+
+    return (
+      <Form.Field>
+        <label>{label}</label>
+        <Dropdown placeholder="Managers" className="medium-top-margin" fluid multiple selection options={options} value={value} onChange={(e, {value}) => input.onChange(value)} error={touched && error}/>
+      </Form.Field>
+    );
+  }
+
+  renderRequiresPermission = ({input, label, type}) => {
+    //console.log('renderRequiresPermission input:', input);
+    return (
+      <Form.Checkbox toggle label={label} onChange={(e, {checked}) => input.onChange(checked)} checked={input.checked}/>
+    )
+    // input.onChange(event, data
+    // <input label={label} {...input} type={type}/>
+  }
+
+  renderAllowedUsers = ({input, label, type, meta: {touched, error}}) => {
+    //console.log('renderFileUploader this.fileUploader', this.fileUploader);
+    const {users} = this.props;
+    //console.log('renderManagers users:', users);
+    const options = users.map(({username}) => ({key: username, text: username, value: username}));
+    const value = input.value || [];
+    //console.log('options:', options);
+
+    return (
+      <Form.Field>
+        <label>{label}</label>
+        <Dropdown placeholder="Users" className="medium-top-margin" fluid multiple selection options={options} value={value} onChange={(e, {value}) => input.onChange(value)}/>
+      </Form.Field>
+    );
   }
 
   render () {
-    //const {filesSelection} = this.state;
-    const {files, id, buttonStatus, logoImage} = this.props;
+    const {logoImage, requiresPermissionReduxForm} = this.props;
+
+    const dua = () => {
+      if(requiresPermissionReduxForm){
+        return (
+          <div>
+            <Field name="dua" component={this.renderTextArea} label="Data User Agreement:" placeholder="You can provide Data User Agreement here"/>
+            <Field name="allowedUsers" component={this.renderAllowedUsers} label="Allowed Users"/>
+          </div>
+        )
+      }else{
+        return null;
+      }
+    }
 
     return (
       <div>
@@ -321,12 +374,17 @@ class EditProject extends React.Component {
               <Field name="logoImage" component={this.renderLogoImage} type="file" label="Logo:" path={logoImage.url}/>
               <FieldArray name="fileList" component={this.renderFields}/>
               <Field name="uploadFileList" component={this.renderUploadFileList} type="file" label="Attach Files:"/>
-              <Button primary loading={this.state.loading} floated="right">Save</Button>
+              <Field name="managers" component={this.renderManagers} label="Managers"/>
+              <Field name="requiresPermission" component={this.renderRequiresPermission} type="checkbox" label="Requires Permission"/>
+              {dua()}
+              <div className="large-top-margin">
+                <Button primary loading={this.state.loading} floated="right">Save</Button>
+              </div>
             </Form>
           </Card.Content>
         </Card>
       </div>
-    )
+    );
   }
 };
 
@@ -338,9 +396,10 @@ EditProject = reduxForm({
 })(EditProject);
 
 EditProject = connect((state, ownProps) => {
-  const {projects} = state;
+  const {projects, users} = state;
 
   const {params: {projectId}} = ownProps;
+  console.log('projectId:', projectId);
 
   let currentProject;
   projects.forEach((project) => {
@@ -353,19 +412,28 @@ EditProject = connect((state, ownProps) => {
   const fileList = currentProject.files.map((file) => {
     return {
       ...file,
-      selected: false}
+      selected: false
+    }
   });
 
+  const {title, description, managers, requiresPermission, allowedUsers, dua} = currentProject;
+
   const initialValues = {
-    title: currentProject.title,
-    description: currentProject.description,
+    title,
+    description,
     buttonStatus: '',
-    fileList
+    fileList,
+    managers,
+    requiresPermission,
+    dua,
+    allowedUsers
   };
 
-  const buttonStatus = selector(state, 'buttonStatus');
+  // const buttonStatus = selector(state, 'buttonStatus');
+  const requiresPermissionReduxForm = selector(state, 'requiresPermission');
+  const duaReduxForm = selector(state, 'dua');
 
-  return {...currentProject, initialValues, buttonStatus};
+  return {...currentProject, requiresPermissionReduxForm, duaReduxForm, users, initialValues};
 })(EditProject);
 
 export default EditProject;

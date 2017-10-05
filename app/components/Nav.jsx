@@ -141,7 +141,7 @@ class Nav extends React.Component {
 
     return (
       <Menu>
-        <Menu.Item header fitted="vertically">
+        <Menu.Item header fitted="vertically" as={Link} to="/">
           <img src="/images/martinos-logo-square.png"/>
           Neuroimaging Archive
         </Menu.Item>

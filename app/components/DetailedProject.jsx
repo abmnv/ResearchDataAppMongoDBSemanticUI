@@ -280,7 +280,7 @@ class DetailedProject extends React.Component {
           <Card.Content extra>
             <Button.Group fluid>
               <Button basic color="red" onClick={this.handleOpenConfirmDeleteProjectModal}>Delete</Button>
-              <Button basic color="green" as={Link} to={`/projects/${id}/manage`}>Manage</Button>
+              <Button basic color="blue" as={Link} to={`/projects/${id}/manage`}>Manage</Button>
               <Button basic color="blue" as={Link} to={`/projects/${id}/edit`}>Edit</Button>
             </Button.Group>
           </Card.Content>

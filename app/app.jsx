@@ -7,7 +7,7 @@ import * as actions from 'actions';
 import Main from 'Main';
 import Projects from 'Projects';
 //import EditProjects from 'EditProjects';
-import EditProject from 'EditProject';
+import EditProjectContainer from 'EditProjectContainer';
 import DetailedProject from 'DetailedProject';
 import CreateProject from 'CreateProject';
 import Login from 'Login';
@@ -44,7 +44,7 @@ ReactDOM.render(
         <Route path="/projects/:projectId" component={DetailedProject}/>
         <Route component={EnsureLoggedInContainer}>
           <Route path="/create-project" component={CreateProject}/>
-          <Route path="/projects/:projectId/edit" component={EditProject}/>
+          <Route path="/projects/:projectId/edit" component={EditProjectContainer}/>
           <Route path="/projects/:projectId/manage" component={ManageProject}/>
           <Route path="/users" component={Users}/>
         </Route>

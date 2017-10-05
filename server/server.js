@@ -178,8 +178,19 @@ app.patch('/projects/:projectId', authenticate, authAllowedManagerOrAdmin, uploa
 }]), (req, res) => {
   //console.log('req.body:', req.body);
   const projectId = req.params.projectId;
-  const body = _.pick(req.body, ['title', 'description']);
-  //console.log('req.files:', req.files);
+  const body = _.pick(req.body, ['title', 'description', 'requiresPermission']);
+  body.requiresPermission = (body.requiresPermission === 'true');
+  // console.log('body', body);
+
+  if(body.requiresPermission){
+    if(!req.body.dua){
+      return res.status(400).send('dua is not found in the request');
+    }
+    body.dua = req.body.dua;
+    if(req.body.allowedUsers){
+      body.allowedUsers = req.body.allowedUsers;
+    }
+  }
 
   let logoImage = null;
   if(req.files.logoImage){
@@ -199,6 +210,16 @@ app.patch('/projects/:projectId', authenticate, authAllowedManagerOrAdmin, uploa
       project[key] = body[key];
     });
 
+    if(!body.requiresPermission){
+      if(project.dua){
+        project.dua = '';
+      }
+      if(project.allowedUsers.length>0){
+        project.allowedUsers = [];
+      }
+    }
+    console.log('project:', project);
+
     if(logoImage){
       return project.updateLogoImage(logoImage);
     }else{
@@ -211,9 +232,9 @@ app.patch('/projects/:projectId', authenticate, authAllowedManagerOrAdmin, uploa
     }
     res.send(doc);
   }).catch((err) => {
-    // console.log('error:', err);
+    console.log('error:', err);
     if(err === 'NotFound'){
-      return res.status(404).send();
+      res.status(404).send();
     }else{
       res.status(400).send(err);
     }
@@ -296,7 +317,6 @@ app.delete('/projects/:projectId/duaRequests/:DUARequestId', authenticate, authA
     if(!project){
       return Promise.reject('NotFound');
     }
-
     project.DUARequests.pull({_id: DUARequestId});
 
     return project.save();
@@ -317,6 +337,37 @@ app.delete('/projects/:projectId/duaRequests/:DUARequestId', authenticate, authA
   });
 });
 
+app.delete('/projects/:id/managers/:username', authenticate, authAllowedManagerOrAdmin, (req, res) => {
+  const {id, username} = req.params;
+
+  Project.findById(id).then((project) => {
+    if(!project){
+      return Promise.reject('NotFound');
+    }
+
+    project.managers = project.managers.filter((m) => {
+      return m !== username;
+    });
+
+    return project.save();
+  }).then((doc) => {
+    if(!doc){
+      return Promise.reject('NotFound');
+    }
+    res.send(doc);
+  }).catch((err) => {
+    console.log('error:', err);
+
+    if(err === 'NotFound'){
+      res.status(404).send();
+    }else{
+      console.log('Error:', err);
+      res.status(400).send(err);
+    }
+  });
+});
+
+
 app.patch('/projects/:projectId/managers', authenticate, authAllowedManagerOrAdmin, (req, res) => {
   const projectId = req.params.projectId;
   //const body = _.pick(req.body, 'managers');
@@ -334,7 +385,7 @@ app.patch('/projects/:projectId/managers', authenticate, authAllowedManagerOrAdm
       return Promise.reject('NotFound');
     }
 
-    console.log('project.managers:', project.managers);
+    // console.log('project.managers:', project.managers);
     project.managers = managers;
 
     return project.save();
@@ -387,8 +438,8 @@ app.patch('/projects/:projectId/allowedUsers', authenticate, authAllowedManagerO
   });
 });
 
-app.post('/projects/:projectId/allowedUsers', authenticate, authAllowedManagerOrAdmin, (req, res) => {
-  const projectId = req.params.projectId;
+app.post('/projects/:id/allowedUsers', authenticate, authAllowedManagerOrAdmin, (req, res) => {
+  const {id} = req.params;
   //const body = _.pick(req.body, 'managers');
   const {username} = req.body;
 
@@ -397,13 +448,13 @@ app.post('/projects/:projectId/allowedUsers', authenticate, authAllowedManagerOr
     return res.status(400).send();
   }
 
-  Project.findById(projectId).then((project) => {
+  Project.findById(id).then((project) => {
     if(!project){
       return Promise.reject('NotFound');
     }
 
     // console.log('project.managers:', project.managers);
-    //Add a new username is it doesn't exist
+    //Add a new username if it doesn't exist
     let exist = false;
     project.allowedUsers.forEach((u) => {
       if(u === username){
@@ -430,6 +481,38 @@ app.post('/projects/:projectId/allowedUsers', authenticate, authAllowedManagerOr
     }
   });
 });
+
+
+app.delete('/projects/:id/allowedUsers/:username', authenticate, authAllowedManagerOrAdmin, (req, res) => {
+  const {id, username} = req.params;
+
+  Project.findById(id).then((project) => {
+    if(!project){
+      return Promise.reject('NotFound');
+    }
+
+    project.allowedUsers = project.managers.filter((user) => {
+      return user !== username;
+    });
+
+    return project.save();
+  }).then((doc) => {
+    if(!doc){
+      return Promise.reject('NotFound');
+    }
+    res.send(doc);
+  }).catch((err) => {
+    console.log('error:', err);
+
+    if(err === 'NotFound'){
+      res.status(404).send();
+    }else{
+      console.log('Error:', err);
+      res.status(400).send(err);
+    }
+  });
+});
+
 
 app.delete('/projects/:projectId', authenticate, authAllowedManagerOrAdmin, (req, res) => {
   //console.log('projectId:', req.params.projectId);
@@ -459,24 +542,26 @@ app.post('/projects', authenticate, authManagerOrAdmin, upload.fields([{
   const user = req.user;
 
   const body = _.pick(req.body, ['title', 'description', 'requiresPermission']);
+  body.requiresPermission = (body.requiresPermission === 'true');
   //console.log('app.post(/projects)', body);
 
   const project = new Project(body);
   project.createdAt = Math.floor((new Date().getTime())/1000);
 
   if(body.requiresPermission){
+    if(!req.body.dua){
+      return res.status(400).send('dua is not found in the request');
+    }
     project.dua = req.body.dua;
+    if(req.body.allowedUsers){
+      project.allowedUsers.push(...req.body.allowedUsers);
+    }
   }
 
   if(req.body.managers){
     const managers = req.body.managers;
-    console.log('managers:', managers);
+    // console.log('managers:', managers);
     project.managers.push(...managers);
-  }
-
-  if(req.body.allowedUsers){
-    const allowedUsers = req.body.allowedUsers;
-    project.allowedUsers.push(...allowedUsers);
   }
   //console.log('project:', project);s
 
@@ -543,19 +628,25 @@ app.post('/users', (req, res) => {
 app.patch('/users/:id/role', authenticate, authAdmin, (req, res) => {
   const {id} = req.params;
   const {role} = req.body;
-  // const body = _.pick(req.body, ['username']);
-  console.log('role:', role);
+  // console.log('role:', role);
 
-  //console.log('user:', user);
   User.findById(id).then((user) => {
     if(!user){
       return Promise.reject('NotFound');
     }
     user.role = role;
+
+    // if(role === 'user'){
+    //   return Project.removeUsernameFromManagers(user.username).then(() => {
+    //     return user.save();
+    //   });
+    // }
+
     return user.save();
   }).then((doc) => {
     res.send(doc);
   }).catch((err) => {
+    console.log(err);
     if(err === 'NotFound'){
       res.status(404).send();
     }else{
@@ -563,6 +654,21 @@ app.patch('/users/:id/role', authenticate, authAdmin, (req, res) => {
     }
   });
 });
+
+app.delete('/users/:id', authenticate, authAdmin, (req, res) => {
+  const {id} = req.params;
+
+  User.findByIdAndRemove(id).then((doc) => {
+    //console.log('doc:', doc);
+    if(!doc){
+      return res.status(404).send();
+    }
+    res.send(doc);
+  }).catch((err) => {
+    res.status(400).send(err);
+  });
+});
+
 
 app.post('/users/login', (req, res) => {
   const body = _.pick(req.body, ['username', 'password']);

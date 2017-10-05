@@ -172,9 +172,9 @@ export var login = () => {
 //   }
 // }
 
-export var removeUsers = () => {
+export var deleteUsers = () => {
   return {
-    type: 'REMOVE_USERS',
+    type: 'DELETE_USERS',
   }
 }
 
@@ -190,7 +190,7 @@ export var startLogout = () => {
     return dbAPI.logout(token).then(() => {
       //console.log('token was removed from MongoDB');
       localStorage.removeItem('researchDataAppToken');
-      return dispatch(removeUsers());
+      return dispatch(deleteUsers());
     }).then(() => {
       return dispatch(logout());
     }).catch((err) => {
@@ -328,6 +328,40 @@ export const updateUsers = (users) => {
   }
 }
 
+export const startDeleteUser = (id, username) => {
+  return (dispatch, getState) => {
+    const {auth: {token}} = getState();
+    //find out the username for the request
+
+    return dbAPI.deleteUser(id, token).then(() => {
+      dispatch(deleteUser(id));
+    }).then(() => {
+      // let seq = Promise.resolve();
+      // projects.forEach((project) => {
+      //   project.allowedUsers.forEach((name) => {
+      //     if(name === username){
+      //       seq = seq.then(() => {
+      //         return dbAPI.deleteAllowedUser(project.id, username, token);
+      //       }).then(() => {
+      //         dispatch(deleteAllowedUser(project.id, username));
+      //       });
+      //     }
+      //   });
+      // });
+      // return seq;
+    }).catch((err) => {
+      return Promise.reject(err);
+    });
+  }
+}
+
+export const deleteUser = (id) => {
+  return {
+    type: 'DELETE_USER',
+    id
+  }
+}
+
 export const startUpdateProjectManagers = (projectId, managers) => {
   return (dispatch, getState) => {
     const {auth: {token}} = getState();
@@ -421,12 +455,50 @@ export const deleteDUARequest = (projectId, DUARequestId) => {
   }
 }
 
-export const startUpdateUserRole = (id, role) => {
+export const startUpdateUserRole = (id, username, role) => {
   return (dispatch, getState) => {
-    const {auth: {token}} = getState();
+    const {projects, auth: {token}} = getState();
     return dbAPI.updateUserRole(id, role, token).then(() => {
       dispatch(updateUserRole(id, role));
+    }).then(() => {
+      let seq = Promise.resolve();
+      //when a user is demoted to user from manager, remove it from manager list
+      if(role === 'user'){
+        projects.forEach((project) => {
+          project.managers.forEach((manager) => {
+            if(manager === username){
+              seq = seq.then(() => {
+                return dbAPI.deleteProjectManager(project.id, username, token);
+              }).then(() => {
+                dispatch(deleteProjectManager(project.id, username));
+              });
+            }
+          });
+        });
+      //when a user is promoted to a manager, remove it from allowed users list
+      }else{
+        projects.forEach((project) => {
+          project.allowedUsers.forEach((allowedUser) => {
+            if(allowedUser === username){
+              seq = seq.then(() => {
+                return dbAPI.deleteAllowedUser(project.id, username, token);
+              }).then(() => {
+                dispatch(deleteAllowedUser(project.id, username));
+              });
+            }
+          });
+        });
+      }
+      return seq;
     });
+  }
+}
+
+export const deleteProjectManager = (id, username) => {
+  return {
+    type: 'DELETE_PROJECT_MANAGER',
+    id,
+    username
   }
 }
 
@@ -435,6 +507,14 @@ export const updateUserRole = (id, role) => {
     type: 'UPDATE_USER_ROLE',
     id,
     role
+  }
+}
+
+export const deleteAllowedUser = (id, username) => {
+  return {
+    type: 'DELETE_ALLOWED_USER',
+    id,
+    username
   }
 }
 
@@ -565,11 +645,20 @@ export var updateProject = (project) => {
   }
 }
 
-export var startUpdateProject = ({id, title, description, logoImage=null, fileList, uploadFileList=[], change, array}) => {
+export var startUpdateProject = ({id, title, description, logoImage=null, fileList, uploadFileList=[], change, array, managers, requiresPermission, dua, allowedUsers}) => {
   return (dispatch, getState) => {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
+    formData.append('requiresPermission', requiresPermission);
+
+    if(requiresPermission){
+      formData.append('dua', dua);
+      allowedUsers.forEach((u) => {
+        formData.append('allowedUsers[]', u);
+      });
+    }
+
     let uploadProgress = null;
 
     if(logoImage){
@@ -584,7 +673,12 @@ export var startUpdateProject = ({id, title, description, logoImage=null, fileLi
     const {auth: {token}} = getState();
     return dbAPI.updateProject(id, formData, uploadProgress, token).then((project) => {
       const {logoImage} = project;
-      dispatch(updateProject({id, title, description, logoImage}));
+      const newProject = {id, title, description, logoImage, managers, requiresPermission, dua, allowedUsers};
+      if(!requiresPermission){
+        newProject.dua = '';
+        newProject.allowedUsers = [];
+      }
+      dispatch(updateProject(newProject));
       change(`logoImage`, null);
 
       let seq = Promise.resolve();
@@ -747,17 +841,14 @@ export var startCreateProject = ({title, description, logoImage=null, fileList=n
 
     if(requiresPermission){
       formData.append('dua', dua);
+      allowedUsers.forEach((u) => {
+        formData.append('allowedUsers[]', u);
+      });
     }
 
     if(managers){
       managers.forEach((m) => {
         formData.append('managers[]', m);
-      });
-    }
-
-    if(allowedUsers){
-      allowedUsers.forEach((u) => {
-        formData.append('allowedUsers[]', u);
       });
     }
 

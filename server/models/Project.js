@@ -157,8 +157,9 @@ const ProjectSchema = new Schema({
   },
   dua: {
     type: String,
-    required: false,
-    minlength: 1,
+    //required: false,
+    default: '',
+    // minlength: 1,
     trim: true
   },
   managers: [{
@@ -288,7 +289,21 @@ ProjectSchema.pre('remove', function(next) {
   }).catch((err) => {
     next(new Error(err));
   });
-})
+});
+
+ProjectSchema.statics.removeUsernameFromManagers = function(username){
+  const Project = this;
+
+  return Project.find({managers: username}).then((docs) => {
+    docs.forEach((doc) => {
+      doc.managers = doc.managers.filter((u) => {
+        return u !== username;
+      });
+      doc.save();
+    });
+    // console.log('User', username, 'is a manger in following projects', docs);
+  });
+}
 
 const Project = mongoose.model('Project', ProjectSchema);
 

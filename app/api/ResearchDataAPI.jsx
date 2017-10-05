@@ -100,6 +100,21 @@ export const updateUserRole = (id, role, token) => {
   });
 }
 
+export const deleteUser = (id, token) => {
+  //console.log('updateProjetMangers token:', token);
+  const config = {
+    headers: {
+      'x-auth': token
+    }
+  }
+  return axios.delete(`/users/${id}`, config).then((res) => {
+    return res.data;
+  }).catch((err) => {
+    return Promise.reject(err);
+  });
+}
+
+
 export const createProject = (formData, token, uploadProgress) => {
   const config = {
     headers: {
@@ -149,6 +164,20 @@ export const updateProjectManagers = (projectId, managers, token) => {
   });
 }
 
+export const deleteProjectManager = (projectId, username, token) => {
+  //console.log('updateProjetMangers token:', token);
+  const config = {
+    headers: {
+      'x-auth': token
+    }
+  }
+  return axios.delete(`/projects/${projectId}/managers/${username}`, config).then((res) => {
+    return res.data;
+  }).catch((err) => {
+    return Promise.reject(err);
+  });
+}
+
 export const updateAllowedUsers = (projectId, allowedUsers, token) => {
   //console.log('updateProjetMangers token:', token);
   const config = {
@@ -171,6 +200,20 @@ export const addUserToAllowedUsers = (projectId, username, token) => {
     }
   }
   return axios.post(`/projects/${projectId}/allowedUsers`, {username}, config).then((res) => {
+    return res.data;
+  }).catch((err) => {
+    return Promise.reject(err);
+  });
+}
+
+export const deleteAllowedUser = (projectId, username, token) => {
+  //console.log('updateProjetMangers token:', token);
+  const config = {
+    headers: {
+      'x-auth': token
+    }
+  }
+  return axios.delete(`/projects/${projectId}/allowedUsers/${username}`, config).then((res) => {
     return res.data;
   }).catch((err) => {
     return Promise.reject(err);

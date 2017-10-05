@@ -13,8 +13,9 @@ class Users extends React.Component {
 
     const {users} = props;
 
-    let managers, admins;
+    let managers, admins, selectedUsers;
     if(users){
+      selectedUsers = users.filter((user) => (user.role === 'user')).map(({username}) => username);
       managers = users.filter((user) => (user.role === 'manager')).map(({username}) => username);
       admins = users.filter((user) => (user.role === 'admin')).map(({username}) => username);
     }
@@ -22,6 +23,7 @@ class Users extends React.Component {
     this.state = {
       managers,
       admins,
+      selectedUsers,
       uploadIsLoading: false
     };
 
@@ -30,31 +32,79 @@ class Users extends React.Component {
   }
 
   componentWillReceiveProps (nextProps) {
+    const {users} = nextProps;
 
     if(this.props.isLoading && !nextProps.isLoading){
-      const {users} = nextProps;
-
       const managers = users.filter((user) => (user.role === 'manager')).map(({username}) => username);
       const admins = users.filter((user) => (user.role === 'admin')).map(({username}) => username);
+      const selectedUsers = users.filter((user) => (user.role === 'user')).map(({username}) => username);
 
       this.setState({
         managers,
-        admins
+        admins,
+        selectedUsers
       });
     }
   }
 
   handleChangeSelection (e, {name, value}) {
     //console.log('handleChange data:', data);
+    const {managers, admins, selectedUsers} = this.state;
+    console.log(name, value);
+
+    let newManagers = managers;
+    let newAdmins = admins;
+    let newSelectedUsers = selectedUsers;
+
+    if(name === 'selectedUsers'){
+      newSelectedUsers = value;
+      if(value.length > selectedUsers.length){
+        const newUsername = value[value.length - 1];
+        newManagers = managers.filter((username) => {
+          return username !== newUsername;
+        });
+        newAdmins = admins.filter((username) => {
+          return username !== newUsername;
+        });
+      }
+    }else if(name === 'managers'){
+      newManagers = value;
+      if(value.length > managers.length){
+        const newUsername = value[value.length - 1];
+        newSelectedUsers = selectedUsers.filter((username) => {
+          return username !== newUsername;
+        });
+        newAdmins = admins.filter((username) => {
+          return username !== newUsername;
+        });
+      }
+    }else if(name === 'admins'){
+      newAdmins = value;
+      if(value.length > admins.length){
+        const newUsername = value[value.length - 1];
+        newSelectedUsers = selectedUsers.filter((username) => {
+          return username !== newUsername;
+        });
+        newManagers = managers.filter((username) => {
+          return username !== newUsername;
+        });
+      }
+    }
+
+    console.log('newSelectedUsers:', newSelectedUsers);
+    console.log('newManagers:', newManagers);
+    console.log('newAdmins:', newAdmins);
 
     this.setState({
-      [name]: value
+      selectedUsers: newSelectedUsers,
+      managers: newManagers,
+      admins: newAdmins
     });
   }
 
   handleUpdate = () => {
     const {dispatch, users} = this.props;
-    const {managers, admins} = this.state;
+    const {managers, admins, selectedUsers} = this.state;
 
     const managersOld = users.filter((user) => (user.role === 'manager')).map(({username}) => username);
     const adminsOld = users.filter((user) => (user.role === 'admin')).map(({username}) => username);
@@ -70,8 +120,12 @@ class Users extends React.Component {
 
     const newUsers = {};
     users.forEach((user) => {
-      newUsers[user.username] = {...user, role: 'user'};
+      newUsers[user.username] = {...user, role: null};
     });
+
+    selectedUsers.forEach((username) => {
+      newUsers[username].role = 'user';
+    })
 
     managers.forEach((username) => {
       newUsers[username].role = 'manager';
@@ -82,15 +136,18 @@ class Users extends React.Component {
     });
 
     console.log('newUsers:', newUsers);
-
     let seq = Promise.resolve();
 
     users.forEach((user) => {
       const {role, username, id} = user;
       const newRole = newUsers[username].role;
-      if(role !== newRole){
+      if(!newRole){
         seq = seq.then(() => {
-          return dispatch(actions.startUpdateUserRole(id, newRole));
+          return dispatch(actions.startDeleteUser(id, username));
+        });
+      }else if(role !== newRole){
+        seq = seq.then(() => {
+          return dispatch(actions.startUpdateUserRole(id, username, newRole));
         });
       }
     });
@@ -124,10 +181,12 @@ class Users extends React.Component {
   handleReset () {
     const {users} = this.props;
 
+    const selectedUsers = users.filter((user) => (user.role === 'user')).map(({username}) => username);
     const managers = users.filter((user) => (user.role === 'manager')).map(({username}) => username);
     const admins = users.filter((user) => (user.role === 'admin')).map(({username}) => username);
 
     this.setState({
+      selectedUsers,
       managers,
       admins
     });
@@ -135,8 +194,7 @@ class Users extends React.Component {
 
   render () {
     const {users, isLoading} = this.props;
-    const {managers, admins, updateIsLoading} = this.state;
-
+    const {managers, admins, updateIsLoading, selectedUsers} = this.state;
 
     if(isLoading){
       return (
@@ -166,14 +224,31 @@ class Users extends React.Component {
         return keep;
       });
 
+      const optionsUsers = options.filter(({value}) => {
+        let keep = true;
+        admins.forEach((admin) => {
+          if(admin === value){
+            keep = false;
+          }
+        });
+        managers.forEach((manager) => {
+          if(manager === value){
+            keep = false;
+          }
+        });
+        return keep;
+      });
+
       return (
         <Card fluid>
           <Card.Content>
             <Card.Description>
+              <Header as="h3">Users</Header>
+              <Dropdown name="selectedUsers" placeholder="Users" fluid multiple selection options={options} value={selectedUsers} onChange={this.handleChangeSelection}/>
               <Header as="h3">Managers</Header>
-              <Dropdown name="managers" placeholder="Managers" fluid multiple selection options={optionsManagers} value={managers} onChange={this.handleChangeSelection}/>
+              <Dropdown name="managers" placeholder="Managers" fluid multiple selection options={options} value={managers} onChange={this.handleChangeSelection}/>
               <Header as="h3">Admins</Header>
-              <Dropdown name="admins" placeholder="Admins" fluid multiple selection options={optionsAdmins} value={admins} onChange={this.handleChangeSelection}/>
+              <Dropdown name="admins" placeholder="Admins" fluid multiple selection options={options} value={admins} onChange={this.handleChangeSelection}/>
               <div className="large-top-margin">
                 <Button primary floated="right" onClick={this.handleUpdate} loading={updateIsLoading}>Save</Button>
                 <Button negative floated="right" onClick={this.handleReset}>Reset</Button>

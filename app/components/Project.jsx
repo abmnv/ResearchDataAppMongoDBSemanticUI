@@ -43,7 +43,7 @@ class Project extends React.Component {
           <Card.Content extra>
             <Button.Group fluid>
               <Button basic color="red" size="tiny" onClick={this.handleDeleteProject}>Delete</Button>
-              <Button basic color="green" as={Link} to={`/edit-projects/${id}/manage`}>Manage</Button>
+              <Button basic color="blue" as={Link} to={`/edit-projects/${id}/manage`}>Manage</Button>
               <Button basic color="blue" as={Link} to={`/edit-projects/${id}/edit`}>Edit</Button>
             </Button.Group>
           </Card.Content>
@@ -69,24 +69,22 @@ class Project extends React.Component {
     }
 
     return (
-      <div>
-        <Card fluid>
-          <Card.Content as={Link} to={'/projects/'+id}>
-            <Image floated="left" size="tiny" src={logoImage.url}/>
-            {duaLabel()}
-            <Card.Header>
-              {title}
-            </Card.Header>
-            <Card.Meta>
-              Created on {moment.unix(createdAt).format('MMM Do, YYYY @ h:mm a')}
-            </Card.Meta>
-            <Card.Description>
-              {briefDescription}
-            </Card.Description>
-          </Card.Content>
-          {projectControlBar()}
-        </Card>
-      </div>
+      <Card fluid>
+        <Card.Content as={Link} to={'/projects/'+id}>
+          <Image floated="left" size="tiny" src={logoImage.url}/>
+          {duaLabel()}
+          <Card.Header>
+            {title}
+          </Card.Header>
+          <Card.Meta>
+            Created on {moment.unix(createdAt).format('MMM Do, YYYY @ h:mm a')}
+          </Card.Meta>
+          <Card.Description>
+            {briefDescription}
+          </Card.Description>
+        </Card.Content>
+        {projectControlBar()}
+      </Card>
     );
     // <Label color="red" attached="top">DUA</Label>
   }

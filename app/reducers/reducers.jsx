@@ -120,7 +120,31 @@ export const projectReducer = (state = [], action) => {
         if(project.id === action.id){
           return {...project, managers: action.managers}
         }else{
-          return project
+          return project;
+        }
+      });
+
+    case 'DELETE_PROJECT_MANAGER':
+      return state.map((project) => {
+        if(project.id === action.id){
+          const managers = project.managers.filter((m) => {
+            return m !== action.username;
+          });
+          return {...project, managers}
+        }else{
+          return project;
+        }
+      });
+
+    case 'DELETE_ALLOWED_USER':
+      return state.map((project) => {
+        if(project.id === action.id){
+          const allowedUsers = project.allowedUsers.filter((username) => {
+            return username !== action.username;
+          });
+          return {...project, allowedUsers}
+        }else{
+          return project;
         }
       });
 
@@ -193,8 +217,13 @@ export const userReducer = (state = [], action) => {
         }
       });
 
-    case 'REMOVE_USERS':
-      return []
+    case 'DELETE_USER':
+      return state.filter((user) => {
+        return user.id !== action.id;
+      });
+
+    case 'DELETE_USERS':
+      return [];
 
     default:
       return state;

@@ -156,8 +156,10 @@ class ManageProject extends React.Component {
     if(isLoading){
       return (<SpinningWheel/>)
     }else{
-      const options = users.map(({username}) => ({key: username, text: username, value: username}));
+      const managersOptions = users.filter(({role}) => (role !== 'user')).map(({username}) => ({key: username, text: username, value: username}));
       const managersValue = managers.map(m => m);
+
+      const allowedUsersOptions = users.filter(({role}) => (role === 'user')).map(({username}) => ({key: username, text: username, value: username}));
       const allowedUsersValue = allowedUsers.map(u => u);
 
       const DUARequestsTable = () => {
@@ -196,9 +198,9 @@ class ManageProject extends React.Component {
           <Card.Content>
             <Card.Description>
               <Header as="h3">Managers</Header>
-              <Dropdown placeholder="Managers" fluid multiple selection options={options} value={managersValue} onChange={this.handleChangeManagers}/>
+              <Dropdown placeholder="Managers" fluid multiple selection options={managersOptions} value={managersValue} onChange={this.handleChangeManagers}/>
               <Header as="h3">Allowed Users</Header>
-              <Dropdown placeholder="Allowed Users" fluid multiple selection options={options} value={allowedUsersValue} onChange={this.handleChangeAlowedUsers}/>
+              <Dropdown placeholder="Allowed Users" fluid multiple selection options={allowedUsersOptions} value={allowedUsersValue} onChange={this.handleChangeAlowedUsers}/>
               <Header as="h3">DUA Requests</Header>
               {DUARequestsTable()}
               <div className="medium-top-margin">
