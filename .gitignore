@@ -3,3 +3,4 @@ public/data/
 public/bundle.js
 .env
 upload/
+yarn.lock

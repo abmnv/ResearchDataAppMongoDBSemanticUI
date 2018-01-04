@@ -6,7 +6,7 @@
   "scripts": {
     "test": "karma start",
     "build": "webpack",
-    "start": "npm run build && node server.js"
+    "start": "yarn run build && node server/server.js"
   },
   "author": "Artem Mamonov",
   "license": "MIT",
